@@ -1,0 +1,970 @@
+/* Importation d'une police moderne via Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ==========================================================================
+   Styles Généraux
+   ========================================================================== */
+body {
+    background-color: #f9fbfc; /* Fond légèrement plus clair */
+    font-family: 'Poppins', sans-serif; /* Police moderne */
+    color: #2d3436; /* Couleur de texte plus douce */
+    line-height: 1.6; /* Meilleure lisibilité */
+}
+
+/* Ajustement des marges pour les sections */
+.container.my-5 {
+    margin-top: 5rem !important;
+    margin-bottom: 5rem !important;
+}
+
+/* Titres généraux */
+h1, h2, h3 {
+    font-family: 'Poppins', sans-serif;
+    color: #2d3436;
+}
+
+h2.section-title {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 15px;
+    font-weight: 600;
+    font-size: 2.25rem; /* Taille plus grande */
+    color: #1e272e; /* Couleur plus sombre */
+}
+
+h2.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Dégradé pour la ligne */
+    border-radius: 3px;
+}
+
+/* Boutons primaires */
+.btn-primary {
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Dégradé sur les boutons */
+    border: none;
+    font-weight: 500;
+    padding: 0.85rem 2rem;
+    border-radius: 50px; /* Boutons arrondis */
+    font-size: 1.1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(90deg, #0056b3, #009a8e);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+}
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
+.navbar {
+    background-color: #ffffff;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-brand {
+    font-size: 1.75rem; /* Plus grand */
+    color: #1e272e;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: #007bff;
+}
+
+.nav-link {
+    position: relative;
+    color: #636e72;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.nav-link i {
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #007bff;
+    transform: translateY(-2px);
+}
+
+.nav-link:hover i {
+    transform: scale(1.2); /* Zoom sur l'icône au survol */
+}
+
+.nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Dégradé pour la ligne active */
+    border-radius: 3px;
+}
+
+.navbar-toggler {
+    border: none;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 123, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Ajustements responsive pour la navbar */
+@media (max-width: 991px) {
+    .navbar-nav {
+        padding: 1.5rem 0;
+    }
+    .nav-link {
+        padding: 0.75rem 1.5rem;
+    }
+    .btn-primary {
+        margin: 0.5rem 1.5rem;
+    }
+}
+
+/* ==========================================================================
+   Avatars (utilisateur, témoignages, etc.)
+   ========================================================================== */
+.user-avatar, .avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #007bff, #00c4b4); /* Dégradé de couleur */
+    color: white;
+    font-weight: 500;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Ombre douce */
+    transition: transform 0.3s ease;
+    object-fit: cover; /* Pour les images */
+}
+
+.user-avatar:hover {
+    transform: scale(1.1); /* Effet de zoom au survol */
+}
+
+/* Avatar spécifique dans la navbar */
+.navbar .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Photo de profil dans settings.php */
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+/* ==========================================================================
+   Cartes (fonctionnalités, témoignages, BMC, etc.)
+   ========================================================================== */
+.card, .feature-card, .testimonial-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    background: #ffffff; /* Fond blanc pour plus de contraste */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* Ombre plus prononcée */
+    border-radius: 15px; /* Coins plus arrondis */
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before, .testimonial-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Barre colorée en haut */
+}
+
+.card:hover, .feature-card:hover {
+    transform: translateY(-8px); /* Soulèvement plus marqué */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.testimonial-card {
+    background-color: #f8f9fa;
+    padding: 2rem; /* Plus de padding */
+    margin-bottom: 2rem;
+}
+
+/* Icônes dans les cartes */
+.card i, .testimonial-card i {
+    font-size: 3.5rem; /* Icônes plus grandes */
+    color: #007bff;
+    transition: transform 0.3s ease;
+}
+
+.card:hover i {
+    transform: scale(1.1); /* Effet de zoom sur les icônes au survol */
+}
+
+/* Textes dans les cartes */
+.card h5, .testimonial-card h6 {
+    color: #1e272e;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.card p, .testimonial-card p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #636e72;
+}
+
+/* Cartes spécifiques pour le BMC (fusionnées avec les styles existants) */
+.bmc-card {
+    position: relative;
+    transition: transform 0.2s ease-in-out;
+    min-height: 200px; /* Ajusté pour cohérence */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Ajusté pour inclure l'espace pour le bouton */
+    padding: 15px;
+    border: 1px solid #007bff; /* Déjà défini dans les styles fournis */
+}
+
+.bmc-card:hover {
+    transform: scale(1.02); /* Remplace translateY(-5px) pour cohérence */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bmc-card.bg-light {
+    background-color: #e6f4fa !important;
+    transition: background-color 0.5s ease-in-out;
+}
+
+/* Conteneur du bouton "Éditer" dans les cartes BMC */
+.edit-btn-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+/* Style pour le bouton "Éditer" dans les cartes BMC */
+.edit-btn {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    line-height: 1;
+    border-radius: 5px;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.edit-btn i {
+    font-size: 0.85rem;
+    margin-right: 4px;
+}
+
+.edit-btn:hover {
+    background-color: #e9ecef;
+    transform: translateY(-1px);
+}
+
+/* Bouton "Éditer" pour les blocs BMC (fusion avec .edit-block-btn) */
+.edit-block-btn {
+    border-radius: 25px; /* Bords plus arrondis */
+    padding: 8px 20px; /* Padding ajusté pour un bouton plus large */
+    font-weight: 500; /* Texte légèrement plus épais */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ombre légère pour donner du relief */
+}
+
+.edit-block-btn:hover {
+    background-color: #007bff; /* Fond bleu au survol */
+    color: white; /* Texte blanc au survol */
+    transform: translateY(-2px); /* Légère élévation au survol */
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); /* Ombre plus marquée au survol */
+}
+
+/* Cartes spécifiques pour les hypothèses */
+.hypothesis-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 100px;
+    overflow: hidden;
+}
+
+.hypothesis-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Barre colorée en haut */
+}
+
+.hypothesis-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.hypothesis-card .hypothesis-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #007bff, #00c4b4);
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.hypothesis-card p {
+    margin: 0;
+    font-size: 1rem;
+    color: #2d3436;
+    flex: 1;
+    line-height: 1.6;
+}
+
+/* Cartes spécifiques pour les KPI (indicateurs de performance) */
+.kpi-card {
+    padding: 20px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+}
+
+.kpi-card h6 {
+    font-weight: 600;
+    color: #1e272e;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Cartes spécifiques pour l'équipe (team-card) */
+.team-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+}
+
+/* ==========================================================================
+   Boutons d'action (hypothèses, modales, etc.)
+   ========================================================================== */
+/* Boutons Modifier, Supprimer et Passer en revue (hypotheses.php) */
+.hypothesis-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.review-btn, .edit-btn, .delete-btn {
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+}
+
+.review-btn i, .edit-btn i, .delete-btn i {
+    margin-right: 5px;
+    font-size: 1.1rem;
+}
+
+.review-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.review-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.delete-btn:hover {
+    background-color: #b02a37;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+/* Boutons d'action en bas (action-buttons) */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 40px;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-buttons::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4);
+}
+
+.action-buttons .btn {
+    padding: 10px 30px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.action-buttons .btn i {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+}
+
+.action-buttons .btn-outline-primary {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.action-buttons .btn-outline-primary:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Boutons dans la modale de révision */
+.review-navigation .btn,
+.validation-actions .btn {
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.review-navigation .btn i,
+.validation-actions .btn i {
+    font-size: 1.1rem;
+    margin-right: 5px;
+}
+
+.validation-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Uniformiser la taille des boutons dans la modale */
+.modal-footer .btn {
+    width: 120px; /* Largeur fixe pour uniformiser */
+    text-align: center;
+}
+
+/* ==========================================================================
+   Sections spécifiques (hero, cta, guide, etc.)
+   ========================================================================== */
+/* Section Hero (index.php) */
+.hero-section {
+    background: linear-gradient(135deg, #007bff, #00c4b4);
+    color: white;
+    padding: 6rem 0; /* Plus de padding */
+    text-align: center;
+    border-radius: 20px;
+    margin-bottom: 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/asfalt-dark.png'); /* Texture subtile */
+    opacity: 0.1;
+}
+
+.hero-section h1 {
+    animation: fadeInDown 1s ease-out; /* Animation d'entrée */
+}
+
+.hero-section .btn {
+    animation: fadeInUp 1s ease-out 0.3s; /* Animation décalée */
+    animation-fill-mode: both;
+}
+
+/* Ajustements responsive pour la section hero */
+@media (max-width: 991px) {
+    .hero-section {
+        padding: 4rem 0; /* Moins de padding sur mobile */
+    }
+    .hero-section h1 {
+        font-size: 2.5rem; /* Taille ajustée */
+    }
+}
+
+/* Section Call-to-Action (index.php) */
+.cta-section {
+    background: linear-gradient(135deg, #007bff, #00c4b4); /* Dégradé cohérent */
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    border-radius: 20px;
+    margin-top: 4rem;
+}
+
+/* Section Guide (guide.php) */
+.guide-section {
+    background: #ffffff; /* Fond blanc pour cohérence */
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.guide-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4); /* Barre colorée en haut */
+}
+
+.guide-section:hover {
+    transform: translateY(-5px);
+}
+
+.guide-section h4 {
+    font-weight: 600;
+    color: #1e272e;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.guide-section h4 i {
+    margin-right: 10px;
+    color: #007bff;
+    font-size: 1.8rem;
+}
+
+.guide-section p, .guide-section ul {
+    color: #636e72;
+    font-size: 0.95rem;
+}
+
+.guide-section ul {
+    padding-left: 25px;
+}
+
+.guide-section li {
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.guide-section li::before {
+    content: '\2022'; /* Bullet point */
+    color: #007bff;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* Barre de progression (hypotheses.php) */
+.progress-section {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4);
+}
+
+.progress-section h5 {
+    font-weight: 600;
+    color: #1e272e;
+    font-size: 1.25rem;
+}
+
+/* Sections financières (financial_plan.php) */
+.financial-form-section,
+.forecast-section,
+.break-even-section,
+.feasibility-section {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.financial-form-section::before,
+.forecast-section::before,
+.break-even-section::before,
+.feasibility-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00c4b4);
+}
+
+.financial-form-section:hover,
+.forecast-section:hover,
+.break-even-section:hover,
+.feasibility-section:hover {
+    transform: translateY(-5px);
+}
+
+.financial-form-section h4,
+.forecast-section h4,
+.break-even-section h4,
+.feasibility-section h4 {
+    font-weight: 600;
+    color: #1e272e;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.financial-form-section h4 i,
+.forecast-section h4 i,
+.break-even-section h4 i,
+.feasibility-section h4 i {
+    margin-right: 10px;
+    color: #007bff;
+    font-size: 1.8rem;
+}
+
+/* ==========================================================================
+   Modales (pop-ups)
+   ========================================================================== */
+.modal-content {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    background-color: #007bff;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    border-top: none;
+    padding: 10px 20px;
+}
+
+/* Centrer le bouton "Enregistrer les modifications" dans la modale */
+.modal-body .btn-primary {
+    display: block; /* Permet de centrer avec margin auto */
+    margin: 0 auto; /* Centre le bouton horizontalement */
+}
+
+/* Loader plein écran (loadingModal) */
+#loadingModal .modal-dialog {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    max-width: 300px; /* Réduire la taille de la modale */
+}
+
+#loadingModal .modal-content {
+    background: rgba(0, 0, 0, 0.5) !important; /* Fond semi-transparent sombre */
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Ombre douce */
+    border-radius: 15px; /* Coins arrondis */
+    text-align: center;
+    padding: 20px;
+}
+
+#loadingModal .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 15px;
+}
+
+/* Style pour le loader épuré */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.spinner-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 4px; /* Épaisseur de la bordure */
+    border-color: #007bff transparent #007bff transparent; /* Couleur avec effet de rotation */
+    animation: spin 1s ease-in-out infinite;
+}
+
+.loading-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff; /* Texte blanc pour contraste */
+    opacity: 0.9;
+    animation: fadeInOut 2s ease-in-out infinite; /* Animation de pulsation */
+}
+
+/* Animation de rotation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Animation de pulsation pour le texte */
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   Formulaires (connexion, financier, etc.)
+   ========================================================================== */
+form .form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+form .input-group-text {
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+    color: #636e72;
+}
+
+form .card {
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+/* ==========================================================================
+   Badges de statut (hypothèses)
+   ========================================================================== */
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background-color: #e9ecef;
+    color: #636e72;
+}
+
+.status-badge.confirmed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+footer {
+    background-color: #212529;
+    color: #f8f9fa;
+}
+
+footer a {
+    color: #f8f9fa;
+}
+
+footer a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
+footer .text-muted {
+    color: #adb5bd !important;
+}
+
+/* Liens avec effet de survol */
+.hover-link:hover {
+    color: #007bff !important;
+    transition: color 0.3s ease;
+}
+
+/* ==========================================================================
+   Animations Keyframes
+   ========================================================================== */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   Autres éléments spécifiques
+   ========================================================================== */
+/* Illustration de bienvenue */
+.welcome-illustration {
+    max-width: 300px;
+}
+
+/* ==========================================================================
+   Styles spécifiques à guide.php
+   ========================================================================== */
+.step-card {
+    border-left: 4px solid #0d6efd;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+}
+
+.tip-box {
+    background-color: #e7f3ff;
+    border-left: 4px solid #0d6efd;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 5px;
+}
+
+.screenshot-placeholder {
+    background-color: #e9ecef;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    margin: 15px 0;
+}
