@@ -83,7 +83,7 @@ $analysis = [
         </div>
 
         <div class="text-center mt-5">
-            <a href="<?= BASE_URL ?>/views/bmc/summary.php?bmc_id=<?= $bmc_id ?>" class="btn btn-primary rounded-3 px-4">
+            <a href="<?= BASE_URL ?>/views/bmc/summary.php?bmc_id=<?= $bmc_id ?>" class="btn btn-primary px-4">
                 <i class="bi bi-file-earmark-text me-2"></i>Retour au récapitulatif
             </a>
         </div>

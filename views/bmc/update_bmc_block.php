@@ -1,73 +1,78 @@
 <?php
 session_start();
-require_once '../../includes/db_connect.php';
+define('BASE_DIR', dirname(__DIR__, 2));
+require_once BASE_DIR . '/includes/db_connect.php';
+require_once BASE_DIR . '/includes/config.php';
 
-// Activer l'affichage des erreurs pour le débogage
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Créer un fichier de log pour déboguer
-$log_file = __DIR__ . '/update_bmc_block.log';
-function log_message($message) {
-    global $log_file;
-    $timestamp = date('Y-m-d H:i:s');
-    file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
-}
-
-header('Content-Type: application/json');
-
-$response = ['success' => false, 'message' => ''];
-
-log_message("Début de update_bmc_block.php");
+error_log("Début de update_bmc_block.php - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'non connecté'));
 
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    $response['message'] = "Vous devez être connecté pour effectuer cette action.";
-    log_message("Erreur : Utilisateur non connecté.");
-    echo json_encode($response);
+    $_SESSION['error'] = 'Vous devez être connecté pour modifier un bloc.';
+    error_log("Erreur: Utilisateur non connecté");
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
     exit();
 }
 
-log_message("Utilisateur connecté : " . $_SESSION['user_id']);
-
-// Vérifier les données POST
-if (!isset($_POST['project_id']) || !isset($_POST['block_name']) || !isset($_POST['content'])) {
-    $response['message'] = "Données manquantes.";
-    log_message("Erreur : Données manquantes - " . json_encode($_POST));
-    echo json_encode($response);
+// Vérifier si la requête est POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $_SESSION['error'] = 'Méthode de requête invalide.';
+    error_log("Erreur: Méthode non POST - " . $_SERVER['REQUEST_METHOD']);
+    header('Location: ' . BASE_URL . '/views/dashboard.php');
     exit();
 }
 
-$project_id = filter_var($_POST['project_id'], FILTER_VALIDATE_INT);
-$block_name = trim($_POST['block_name']);
-$content = trim($_POST['content']);
+// Récupérer les données du formulaire
+$project_id = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+$block_name = isset($_POST['block_name']) ? trim($_POST['block_name']) : '';
+$content = isset($_POST['block_content']) ? trim($_POST['block_content']) : '';
 
-log_message("Données reçues - project_id: $project_id, block_name: $block_name, content: $content");
+error_log("Données reçues - project_id: $project_id, block_name: $block_name, content: " . substr($content, 0, 100));
 
-if (!$project_id || empty($block_name) || empty($content)) {
-    $response['message'] = "Données invalides.";
-    log_message("Erreur : Données invalides - project_id: $project_id, block_name: $block_name, content: $content");
-    echo json_encode($response);
+// Liste des blocs valides
+$valid_blocks = [
+    'segments_clientele', 'proposition_valeur', 'canaux', 'relations_clients',
+    'sources_revenus', 'ressources_cles', 'activites_cles', 'partenaires_cles', 'structure_couts'
+];
+
+// Validation des données
+if ($project_id <= 0) {
+    $_SESSION['error'] = 'ID du projet invalide.';
+    error_log("Erreur: project_id invalide - $project_id");
+    header('Location: ' . BASE_URL . '/views/dashboard.php');
+    exit();
+}
+if (!in_array($block_name, $valid_blocks)) {
+    $_SESSION['error'] = 'Nom du bloc invalide.';
+    error_log("Erreur: block_name invalide - $block_name");
+    header('Location: ' . BASE_URL . '/views/dashboard.php');
+    exit();
+}
+if (empty($content)) {
+    $_SESSION['error'] = 'Le contenu ne peut pas être vide.';
+    error_log("Erreur: Contenu vide");
+    header('Location: ' . BASE_URL . '/views/bmc/visualisation.php?project_id=' . $project_id);
+    exit();
+}
+if (strlen($content) > 2000) {
+    $_SESSION['error'] = 'Le contenu est trop long (maximum 2000 caractères).';
+    error_log("Erreur: Contenu trop long - " . strlen($content));
+    header('Location: ' . BASE_URL . '/views/bmc/visualisation.php?project_id=' . $project_id);
     exit();
 }
 
-// Vérifier que le projet appartient à l'utilisateur
+// Vérifier l'accès au projet
 try {
-    $stmt = $pdo->prepare("SELECT user_id FROM projects WHERE id = :project_id");
-    $stmt->execute(['project_id' => $project_id]);
-    $project = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$project || $project['user_id'] != $_SESSION['user_id']) {
-        $response['message'] = "Projet non trouvé ou accès non autorisé.";
-        log_message("Erreur : Projet non trouvé ou accès non autorisé - project_id: $project_id, user_id: " . $_SESSION['user_id']);
-        echo json_encode($response);
+    $stmt = $pdo->prepare("SELECT id FROM projects WHERE id = :id AND user_id = :user_id");
+    $stmt->execute(['id' => $project_id, 'user_id' => $_SESSION['user_id']]);
+    if (!$stmt->fetch()) {
+        $_SESSION['error'] = 'Projet non trouvé ou accès non autorisé.';
+        error_log("Erreur: Projet non trouvé ou accès non autorisé - project_id: $project_id, user_id: {$_SESSION['user_id']}");
+        header('Location: ' . BASE_URL . '/views/dashboard.php');
         exit();
     }
 
-    log_message("Projet vérifié - appartient à l'utilisateur : " . $_SESSION['user_id']);
-
-    // Mettre à jour le bloc dans la table `bmc`
+    // Mettre à jour ou insérer le contenu du bloc
     $stmt = $pdo->prepare("UPDATE bmc SET content = :content WHERE project_id = :project_id AND block_name = :block_name");
     $stmt->execute([
         'content' => $content,
@@ -75,22 +80,31 @@ try {
         'block_name' => $block_name
     ]);
 
-    $rowCount = $stmt->rowCount();
-    log_message("Requête UPDATE exécutée - Lignes affectées : $rowCount");
-
-    if ($rowCount > 0) {
-        $response['success'] = true;
-        $response['message'] = "Bloc mis à jour avec succès.";
-        log_message("Succès : Bloc mis à jour - block_name: $block_name");
-    } else {
-        $response['message'] = "Aucune modification effectuée ou bloc non trouvé.";
-        log_message("Erreur : Aucune modification effectuée ou bloc non trouvé - block_name: $block_name");
+    if ($stmt->rowCount() === 0) {
+        error_log("Aucune ligne affectée par UPDATE, tentative d'INSERT - project_id: $project_id, block_name: $block_name");
+        $stmt = $pdo->prepare("INSERT INTO bmc (project_id, block_name, content) VALUES (:project_id, :block_name, :content)");
+        $stmt->execute([
+            'project_id' => $project_id,
+            'block_name' => $block_name,
+            'content' => $content
+        ]);
     }
+
+    $_SESSION['success'] = 'Bloc mis à jour avec succès.';
+    error_log("Succès: Bloc mis à jour - project_id: $project_id, block_name: $block_name");
 } catch (PDOException $e) {
-    $response['message'] = "Erreur lors de la mise à jour : " . $e->getMessage();
-    log_message("Erreur PDO : " . $e->getMessage());
+    $_SESSION['error'] = 'Erreur lors de la mise à jour dans la base de données.';
+    error_log("Erreur PDO: " . $e->getMessage());
+    header('Location: ' . BASE_URL . '/views/bmc/visualisation.php?project_id=' . $project_id);
+    exit();
+} catch (Exception $e) {
+    $_SESSION['error'] = 'Erreur inattendue.';
+    error_log("Erreur générale: " . $e->getMessage());
+    header('Location: ' . BASE_URL . '/views/bmc/visualisation.php?project_id=' . $project_id);
+    exit();
 }
 
-echo json_encode($response);
-log_message("Fin de update_bmc_block.php - Réponse : " . json_encode($response));
+// Rediriger vers visualisation.php avec le project_id
+header('Location: ' . BASE_URL . '/views/bmc/visualisation.php?project_id=' . $project_id);
 exit();
+?>

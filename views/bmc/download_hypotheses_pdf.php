@@ -7,6 +7,9 @@ require_once BASE_DIR . '/includes/db_connect.php';
 require_once BASE_DIR . '/includes/config.php';
 require_once BASE_DIR . '/vendor/autoload.php';
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -50,32 +53,7 @@ try {
     exit();
 }
 
-// Inclure la bibliothèque TCPDF
-use \TCPDF;
-
-// Créer une nouvelle instance de TCPDF
-$pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-// Définir les informations du document
-$pdf->SetCreator(PDF_CREATOR);
-$pdf->SetAuthor($_SESSION['username'] ?? 'Utilisateur');
-$pdf->SetTitle('Hypothèses - ' . $project['name']);
-$pdf->SetSubject('Liste des hypothèses générées pour le projet');
-$pdf->SetKeywords('Hypothèses, Business Model Canvas, Projet');
-
-// Définir les marges
-$pdf->SetMargins(20, 20, 20);
-$pdf->SetHeaderMargin(0); // Pas de marge pour l'en-tête personnalisé
-$pdf->SetFooterMargin(10);
-
-// Désactiver l'en-tête et le pied de page par défaut de TCPDF
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
-
-// Ajouter une page
-$pdf->AddPage();
-
-// Créer le contenu HTML avec le même design que download_bmc_pdf.php
+// Créer le contenu HTML pour le PDF
 $html = '
 <!DOCTYPE html>
 <html lang="fr">
@@ -84,7 +62,7 @@ $html = '
     <title>Hypothèses - Laila Workspace</title>
     <style>
         body { 
-            font-family: Helvetica, sans-serif; 
+            font-family: Arial, sans-serif; 
             margin: 0;
             padding: 0;
         }
@@ -114,10 +92,14 @@ $html = '
         .text-muted { 
             color: #6c757d; 
         }
+        .hypothesis-container { 
+            margin: 20px 0; 
+        }
         .hypothesis-card { 
             border: 1px solid #ddd; 
             padding: 15px; 
             margin-bottom: 10px; 
+            text-align: left; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .footer {
@@ -141,7 +123,8 @@ $html = '
         <h4>Description du Projet</h4>
         <p class="text-muted">' . htmlspecialchars($project['description']) . '</p>
 
-        <h4>Liste des Hypothèses</h4>';
+        <div class="hypothesis-container">
+            <h4>Liste des Hypothèses</h4>';
 
 if (empty($hypotheses)) {
     $html .= '<p class="text-muted">Aucune hypothèse disponible pour ce projet.</p>';
@@ -149,14 +132,15 @@ if (empty($hypotheses)) {
     $index = 1;
     foreach ($hypotheses as $hypothesis) {
         $html .= '
-        <div class="hypothesis-card">
-            <p><strong>' . $index . '.</strong> ' . htmlspecialchars($hypothesis['hypothesis_text']) . '</p>
-        </div>';
+            <div class="hypothesis-card">
+                <p><strong>' . $index . '.</strong> ' . htmlspecialchars($hypothesis['hypothesis_text']) . '</p>
+            </div>';
         $index++;
     }
 }
 
 $html .= '
+        </div>
     </div>
     <div class="footer">
         Généré par Laila Workspace - ' . date('Y') . '
@@ -164,11 +148,24 @@ $html .= '
 </body>
 </html>';
 
-// Écrire le HTML dans le PDF
-$pdf->writeHTML($html, true, false, true, false, '');
+// Initialiser Dompdf
+$options = new Options();
+$options->set('isHtml5ParserEnabled', true);
+$options->set('isRemoteEnabled', false);
+$dompdf = new Dompdf($options);
 
-// Générer le PDF et le télécharger
+// Charger le HTML dans Dompdf
+$dompdf->loadHtml($html);
+
+// Définir le format de la page (A4, portrait)
+$dompdf->setPaper('A4', 'portrait');
+
+// Rendre le PDF
+$dompdf->render();
+
+// Télécharger le PDF
 $project_name = preg_replace('/[^A-Za-z0-9\-]/', '_', $project['name']);
 $file_name = 'Hypotheses_' . $project_name . '_' . date('Ymd') . '.pdf';
-$pdf->Output($file_name, 'D');
+$dompdf->stream($file_name, ['Attachment' => true]);
 exit();
+?>

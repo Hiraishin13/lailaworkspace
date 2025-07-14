@@ -122,41 +122,20 @@ $html = '
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
-                        <h5>Partenaires clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Partenaires clés'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Ressources clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Ressources clés'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Segments de clientèle</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Segments de clientèle'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Activités clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Activités clés'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
                         <h5>Proposition de valeur</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Proposition de valeur'] ?? 'Non spécifié') . '</p>
+                        <p class="text-muted">' . htmlspecialchars($blocks['proposition_valeur'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Clients</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['segments_clientele'] ?? 'Non spécifié') . '</p>
                     </div>
                 </div>
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
                         <h5>Canaux</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Canaux'] ?? 'Non spécifié') . '</p>
+                        <p class="text-muted">' . htmlspecialchars($blocks['canaux'] ?? 'Non spécifié') . '</p>
                     </div>
                 </div>
             </div>
@@ -164,20 +143,41 @@ $html = '
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
-                        <h5>Structure des coûts</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Structure des coûts'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Sources de revenus</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Sources de revenus'] ?? 'Non spécifié') . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
                         <h5>Relations clients</h5>
-                        <p class="text-muted">' . htmlspecialchars($blocks['Relations clients'] ?? 'Non spécifié') . '</p>
+                        <p class="text-muted">' . htmlspecialchars($blocks['relations_clients'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Activité</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['activites_cles'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Ressources</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['ressources_cles'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Partenaires</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['partenaires_cles'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Structure de coûts</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['structure_couts'] ?? 'Non spécifié') . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Structure de pricing</h5>
+                        <p class="text-muted">' . htmlspecialchars($blocks['sources_revenus'] ?? 'Non spécifié') . '</p>
                     </div>
                 </div>
             </div>

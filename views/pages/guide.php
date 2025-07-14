@@ -76,7 +76,7 @@ require_once '../../views/layouts/navbar.php';
         </div>
 
         <div class="text-center">
-            <a href="<?= BASE_URL ?>/views/index.php" class="btn btn-primary rounded-3 px-4">
+            <a href="<?= BASE_URL ?>/views/index.php" class="btn btn-primary px-4">
                 <i class="bi bi-rocket-takeoff me-2"></i>Commencer maintenant
             </a>
         </div>

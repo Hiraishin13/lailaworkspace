@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Activer la gestion des sorties pour éviter les erreurs de redirection
+ob_start();
+
 // Définir le chemin de base pour les inclusions
 define('BASE_DIR', dirname(__DIR__, 2)); // Remonte de views/bmc/ à la racine du projet (laila_workspace)
 
@@ -14,9 +17,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Vérifier si un project_id est fourni
-if (!isset($_GET['project_id']) || !is_numeric($_GET['project_id'])) {
-    $_SESSION['error'] = "Projet non spécifié.";
+// Vérifier si un project_id est fourni et valide
+if (!isset($_GET['project_id']) || !is_numeric($_GET['project_id']) || (int)$_GET['project_id'] <= 0) {
+    $_SESSION['error'] = "Projet non spécifié ou invalide.";
     header('Location: ../dashboard.php');
     exit();
 }
@@ -35,7 +38,8 @@ try {
         exit();
     }
 } catch (PDOException $e) {
-    $_SESSION['error'] = "Erreur lors de la récupération du projet : " . $e->getMessage();
+    error_log('Erreur lors de la récupération du projet : ' . $e->getMessage());
+    $_SESSION['error'] = "Erreur lors de la récupération du projet.";
     header('Location: ../dashboard.php');
     exit();
 }
@@ -49,64 +53,71 @@ if (isset($_GET['generate']) && $_GET['generate'] == 1) {
         }
         $client = \OpenAI::client(OPENAI_API_KEY);
     } catch (Exception $e) {
-        $_SESSION['error'] = "Erreur de configuration de l'API OpenAI : " . $e->getMessage();
+        error_log('Erreur de configuration de l\'API OpenAI : ' . $e->getMessage());
+        $_SESSION['error'] = "Erreur de configuration de l'API OpenAI.";
         header("Location: hypotheses.php?project_id=$project_id");
         exit();
     }
 
     // Créer le prompt pour générer des hypothèses
-    $api_prompt = "Génère 4 à 5 hypothèses testables pour le Business Model Canvas du projet suivant : " . $project['description'] . ". Chaque hypothèse doit être concise, claire et commencer par 'Nous supposons que'. Par exemple : 'Nous supposons que les clients seront prêts à payer 10€ par mois pour ce service.' Fournis les hypothèses sous forme de liste, une par ligne.";
+    $api_prompt = <<<EOD
+Tu es un expert en création de Business Model Canvas et en génération d'hypothèses testables.
+Génère 4 à 5 hypothèses testables pour le Business Model Canvas du projet suivant : "{$project['description']}".
+Chaque hypothèse doit être concise, claire et commencer par "Nous supposons que".
+Par exemple : "Nous supposons que les clients seront prêts à payer 10€ par mois pour ce service."
+Fournis les hypothèses sous forme de liste, une par ligne, sans numérotation ni puces.
+EOD;
 
     try {
         $response = $client->chat()->create([
-            'model' => 'gpt-4',
+            'model' => 'gpt-3.5-turbo',
             'messages' => [
-                ['role' => 'system', 'content' => 'Tu es un expert en création de Business Model Canvas et en génération d\'hypothèses testables.'],
                 ['role' => 'user', 'content' => $api_prompt],
             ],
             'max_tokens' => 500,
             'temperature' => 0.7,
         ]);
 
+        // Vérifier si la réponse contient du contenu
+        if (!isset($response->choices[0]->message->content)) {
+            throw new Exception('Réponse vide ou invalide de l\'API OpenAI');
+        }
+
         $generated_text = $response->choices[0]->message->content;
         $hypotheses = array_filter(array_map('trim', explode("\n", $generated_text)));
 
-        // Enregistrer les hypothèses dans la base de données
-        $stmt = $pdo->prepare("INSERT INTO hypotheses (project_id, hypothesis_text, status) VALUES (:project_id, :hypothesis_text, 'pending')");
-        foreach ($hypotheses as $hypothesis) {
-            if (!empty($hypothesis)) {
-                $stmt->execute([
-                    'project_id' => $project_id,
-                    'hypothesis_text' => $hypothesis
-                ]);
+        // Vérifier si des hypothèses ont été générées
+        if (empty($hypotheses)) {
+            throw new Exception('Aucune hypothèse générée par l\'API OpenAI');
+        }
+
+        // Enregistrer les hypothèses dans la base de données avec une transaction
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("INSERT INTO hypotheses (project_id, hypothesis_text, status) VALUES (:project_id, :hypothesis_text, 'pending')");
+            foreach ($hypotheses as $hypothesis) {
+                if (!empty($hypothesis)) {
+                    $stmt->execute([
+                        'project_id' => $project_id,
+                        'hypothesis_text' => $hypothesis
+                    ]);
+                }
             }
+            $pdo->commit();
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            throw new Exception('Erreur lors de l\'enregistrement des hypothèses : ' . $e->getMessage());
         }
 
         // Rediriger pour éviter de regénérer à chaque rechargement
         header("Location: hypotheses.php?project_id=$project_id");
         exit();
     } catch (Exception $e) {
-        $_SESSION['error'] = "Erreur lors de la génération des hypothèses : " . $e->getMessage();
+        error_log('Erreur lors de la génération des hypothèses : ' . $e->getMessage());
+        $_SESSION['error'] = "Erreur lors de la génération des hypothèses.";
         header("Location: hypotheses.php?project_id=$project_id");
         exit();
     }
-}
-
-// Ajout manuel d'une hypothèse (non utilisé car géré via AJAX maintenant)
-if (isset($_POST['add_hypothesis']) && !empty(trim($_POST['hypothesis_text']))) {
-    $hypothesis_text = htmlspecialchars(trim($_POST['hypothesis_text']), ENT_QUOTES, 'UTF-8');
-    try {
-        $stmt = $pdo->prepare("INSERT INTO hypotheses (project_id, hypothesis_text, status) VALUES (:project_id, :hypothesis_text, 'pending')");
-        $stmt->execute([
-            'project_id' => $project_id,
-            'hypothesis_text' => $hypothesis_text
-        ]);
-        $_SESSION['success'] = "Hypothèse ajoutée avec succès !";
-    } catch (PDOException $e) {
-        $_SESSION['error'] = "Erreur lors de l'ajout de l'hypothèse : " . $e->getMessage();
-    }
-    header("Location: hypotheses.php?project_id=$project_id");
-    exit();
 }
 
 // Charger les hypothèses existantes
@@ -123,7 +134,8 @@ try {
     }));
     $progress_percentage = $total_hypotheses > 0 ? ($confirmed_hypotheses / $total_hypotheses) * 100 : 0;
 } catch (PDOException $e) {
-    $_SESSION['error'] = "Erreur lors de la récupération des hypothèses : " . $e->getMessage();
+    error_log('Erreur lors de la récupération des hypothèses : ' . $e->getMessage());
+    $_SESSION['error'] = "Erreur lors de la récupération des hypothèses.";
 }
 ?>
 
@@ -135,55 +147,8 @@ try {
     <title>Gestion des Hypothèses - Laila Workspace</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
-    <style>
-        /* Style pour le loader épuré */
-        #loadingModal .modal-dialog {
-            max-width: 300px; /* Réduire la taille de la modale */
-        }
-
-        #loadingModal .modal-content {
-            background: rgba(0, 0, 0, 0.5) !important; /* Fond semi-transparent sombre */
-            border-radius: 15px; /* Coins arrondis */
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Ombre douce */
-        }
-
-        .spinner-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .spinner-custom {
-            width: 3rem;
-            height: 3rem;
-            border-width: 4px; /* Épaisseur de la bordure */
-            border-color: #007bff transparent #007bff transparent; /* Couleur avec effet de rotation */
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        .loading-text {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #ffffff; /* Texte blanc pour contraste */
-            opacity: 0.9;
-            animation: fadeInOut 2s ease-in-out infinite; /* Animation de pulsation */
-        }
-
-        /* Animation de rotation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Animation de pulsation pour le texte */
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-    </style>
+    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL) ?>/assets/css/styles.css">
+    <!-- Suppression des styles locaux, tout passe par le CSS global -->
 </head>
 <body>
     <?php include '../layouts/navbar.php'; ?>
@@ -211,17 +176,13 @@ try {
         <div class="guide-section">
             <h4 class="text-primary"><i class="bi bi-info-circle me-2"></i> Guide : Comprendre et Gérer vos Hypothèses</h4>
             <p class="text-muted">
-                Les hypothèses sont des suppositions clés que vous faites sur votre modèle d'affaires. Elles doivent être testées pour valider ou invalider votre Business Model Canvas (BMC). Voici quelques conseils pour bien gérer vos hypothèses :
+                Les Hypothèses sont des suppositions clés qui ressortent de votre modèle d’affaire. Elles doivent être testées pour valider ou invalider votre Business Model Canvas (BMC). Voici quelques conseils pour bien gérer vos hypothèses :
             </p>
             <ul class="text-muted">
-                <li><strong>Clarté :</strong> Formulez vos hypothèses de manière claire et testable (ex. : "Les clients seront prêts à payer 10€ par mois pour ce service").</li>
                 <li><strong>Priorisation :</strong> Identifiez les hypothèses les plus critiques pour votre projet et testez-les en premier.</li>
                 <li><strong>Tests :</strong> Utilisez des méthodes comme des enquêtes, des interviews ou des tests A/B pour valider vos hypothèses.</li>
                 <li><strong>Adaptation :</strong> Si une hypothèse est invalidée, ajustez votre BMC en conséquence.</li>
             </ul>
-            <p class="text-muted">
-                Utilisez les boutons ci-dessous pour gérer vos hypothèses.
-            </p>
         </div>
 
         <!-- Barre de progression -->
@@ -243,41 +204,39 @@ try {
                 <h3 class="section-title text-center mb-4">Vos Hypothèses</h3>
                 <div id="hypotheses-list">
                     <?php if (empty($hypotheses)): ?>
-                        <p class="text-center text-muted">Aucune hypothèse pour ce projet. Générez ou ajoutez-en une ci-dessous !</p>
+                        <p class="text-center text-muted">Aucune hypothèse pour ce projet. Générez-en une ci-dessous !</p>
                     <?php else: ?>
+                        <div class="row g-3">
                         <?php foreach ($hypotheses as $index => $hypothesis): ?>
-                            <div class="hypothesis-card" data-id="<?= $hypothesis['id'] ?>">
-                                <div class="hypothesis-number"><?= $index + 1 ?></div>
-                                <p>
-                                    <?= htmlspecialchars($hypothesis['hypothesis_text']) ?>
-                                    <span class="status-badge ms-2 <?= $hypothesis['status'] ?>">
-                                        <?= ucfirst($hypothesis['status'] === 'pending' ? 'En attente' : ($hypothesis['status'] === 'confirmed' ? 'Confirmée' : 'Rejetée')) ?>
-                                    </span>
-                                </p>
-                                <div class="hypothesis-actions">
-                                    <button class="btn review-btn review-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-index="<?= $index ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-status="<?= $hypothesis['status'] ?>" data-test-plan="<?= htmlspecialchars($hypothesis['test_plan'] ?? '') ?>" data-bs-toggle="modal" data-bs-target="#reviewHypothesisModal">
-                                        <i class="bi bi-eye"></i> Passer en revue
-                                    </button>
-                                    <button class="btn edit-btn edit-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-bs-toggle="modal" data-bs-target="#editHypothesisModal">
-                                        <i class="bi bi-pencil"></i> Modifier
-                                    </button>
-                                    <button class="btn delete-btn delete-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>">
-                                        <i class="bi bi-trash"></i> Supprimer
-                                    </button>
+                            <div class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="hypothesis-card bmc-card h-100 d-flex flex-column" data-id="<?= $hypothesis['id'] ?>">
+                                    <div class="hypothesis-number"><?= $index + 1 ?></div>
+                                    <div class="bmc-content">
+                                        <?= htmlspecialchars($hypothesis['hypothesis_text']) ?>
+                                        <span class="status-badge ms-2 <?= htmlspecialchars($hypothesis['status']) ?>">
+                                            <?= ucfirst($hypothesis['status'] === 'pending' ? 'En attente' : ($hypothesis['status'] === 'confirmed' ? 'Confirmée' : 'Rejetée')) ?>
+                                        </span>
+                                    </div>
+                                    <div class="hypothesis-actions mt-auto">
+                                        <button class="btn review-btn review-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-index="<?= $index ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-status="<?= htmlspecialchars($hypothesis['status']) ?>" data-test-plan="<?= htmlspecialchars($hypothesis['test_plan'] ?? '') ?>" data-bs-toggle="modal" data-bs-target="#reviewHypothesisModal">
+                                            <i class="bi bi-eye"></i> Voir
+                                        </button>
+                                        <button class="btn btn-edit edit-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-bs-toggle="modal" data-bs-target="#editHypothesisModal">
+                                            <i class="bi bi-pencil"></i> Modifier
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
 
                 <!-- Boutons d'action en bas -->
-                <div class="action-buttons">
+                <div class="visualisation-actions mt-4">
                     <a href="hypotheses.php?project_id=<?= $project_id ?>&generate=1" class="btn btn-primary" id="generate-hypotheses-btn">
-                        <i class="bi bi-magic"></i> Générer des Hypothèses
+                        <i class="bi bi-magic"></i> Générer des Analyses
                     </a>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addHypothesisModal">
-                        <i class="bi bi-plus-circle"></i> Ajouter une Hypothèse
-                    </button>
                     <a href="download_hypotheses_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary">
                         <i class="bi bi-file-earmark-pdf"></i> Télécharger en PDF
                     </a>
@@ -289,47 +248,6 @@ try {
                             <i class="bi bi-calculator"></i> Passer au Plan Financier
                         </a>
                     <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale pour ajouter une hypothèse -->
-    <div class="modal fade" id="addHypothesisModal" tabindex="-1" aria-labelledby="addHypothesisModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addHypothesisModalLabel">Ajouter une Hypothèse</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addHypothesisForm">
-                        <div class="mb-3">
-                            <label for="hypothesis_text" class="form-label">Texte de l'Hypothèse</label>
-                            <textarea class="form-control" id="hypothesis_text" name="hypothesis_text" rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale pour confirmer l'ajout d'une hypothèse -->
-    <div class="modal fade" id="confirmAddModal" tabindex="-1" aria-labelledby="confirmAddModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmAddModalLabel">Confirmer l'Ajout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir ajouter cette hypothèse ?</p>
-                    <p class="text-muted" id="confirm-add-text"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-primary" id="confirm-add-btn">Confirmer</button>
                 </div>
             </div>
         </div>
@@ -351,7 +269,7 @@ try {
                             <label for="edit_hypothesis_text" class="form-label">Texte de l'Hypothèse</label>
                             <textarea class="form-control" id="edit_hypothesis_text" name="hypothesis_text" rows="3" required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Enregistrer les Modifications</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer </button>
                     </form>
                 </div>
             </div>
@@ -405,44 +323,7 @@ try {
         </div>
     </div>
 
-    <!-- Modale de confirmation de suppression -->
-    <div class="modal fade" id="deleteHypothesisModal" tabindex="-1" aria-labelledby="deleteHypothesisModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteHypothesisModalLabel">Confirmer la Suppression</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer cette hypothèse ? Cette action est irréversible.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-danger" id="confirm-delete-btn">Supprimer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale de confirmation d'enregistrement -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="successModalLabel">Succès</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-center">L'hypothèse a été enregistrée avec succès !</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale pour confirmer l'action de confirmation/infirmation -->
+    <!-- Modale pour confirmer l'action (confirmation/infirmation) -->
     <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -456,42 +337,6 @@ try {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="button" class="btn btn-primary" id="confirm-action-btn">Confirmer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale pour la confirmation de l'action réussie -->
-    <div class="modal fade" id="actionSuccessModal" tabindex="-1" aria-labelledby="actionSuccessModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="actionSuccessModalLabel">Action Réussie</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-center" id="action-success-message"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale pour la confirmation de suppression réussie -->
-    <div class="modal fade" id="deleteSuccessModal" tabindex="-1" aria-labelledby="deleteSuccessModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteSuccessModalLabel">Suppression Réussie</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-center">L'hypothèse a été supprimée avec succès !</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
                 </div>
             </div>
         </div>
@@ -531,83 +376,16 @@ try {
         </div>
     </div>
 
+    <!-- Conteneur pour l'icône de confirmation -->
+    <div id="successIcon">
+        <i class="bi bi-check-circle"></i>
+    </div>
+
     <?php include '../layouts/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     $(document).ready(function() {
-        // Variable pour stocker le texte de l'hypothèse à ajouter
-        let hypothesisTextToAdd = null;
-
-        // Ajouter une nouvelle hypothèse
-        $('#addHypothesisForm').on('submit', function(e) {
-            e.preventDefault();
-            hypothesisTextToAdd = $('#hypothesis_text').val();
-            $('#confirm-add-text').text(hypothesisTextToAdd);
-            $('#confirmAddModal').modal('show');
-        });
-
-        // Confirmer l'ajout
-        $('#confirm-add-btn').on('click', function() {
-            if (hypothesisTextToAdd) {
-                $.ajax({
-                    url: 'add_hypothesis.php',
-                    method: 'POST',
-                    data: {
-                        project_id: <?= $project_id ?>,
-                        hypothesis_text: hypothesisTextToAdd
-                    },
-                    success: function(response) {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            $('#confirmAddModal').modal('hide');
-                            $('#addHypothesisModal').modal('hide');
-                            $('#actionSuccessModal').modal('show').find('#action-success-message').text('Hypothèse ajoutée avec succès !');
-                            const index = $('.hypothesis-card').length + 1;
-                            const newHypothesisHtml = `
-                                <div class="hypothesis-card" data-id="${result.hypothesis_id}">
-                                    <div class="hypothesis-number">${index}</div>
-                                    <p>
-                                        ${result.hypothesis_text}
-                                        <span class="status-badge ms-2 ${result.status}">
-                                            ${result.status === 'pending' ? 'En attente' : (result.status === 'confirmed' ? 'Confirmée' : 'Rejetée')}
-                                        </span>
-                                    </p>
-                                    <div class="hypothesis-actions">
-                                        <button class="btn review-btn review-hypothesis-btn" data-id="${result.hypothesis_id}" data-index="${index - 1}" data-text="${result.hypothesis_text}" data-status="${result.status}" data-test-plan="" data-bs-toggle="modal" data-bs-target="#reviewHypothesisModal">
-                                            <i class="bi bi-eye"></i> Passer en revue
-                                        </button>
-                                        <button class="btn edit-btn edit-hypothesis-btn" data-id="${result.hypothesis_id}" data-text="${result.hypothesis_text}" data-bs-toggle="modal" data-bs-target="#editHypothesisModal">
-                                            <i class="bi bi-pencil"></i> Modifier
-                                        </button>
-                                        <button class="btn delete-btn delete-hypothesis-btn" data-id="${result.hypothesis_id}">
-                                            <i class="bi bi-trash"></i> Supprimer
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            if ($('#hypotheses-list').children().length === 1 && $('#hypotheses-list p.text-center').length) {
-                                $('#hypotheses-list').html(newHypothesisHtml);
-                            } else {
-                                $('#hypotheses-list').append(newHypothesisHtml);
-                            }
-                            $('#hypothesis_text').val('');
-                            updateProgressBar();
-                            checkProgressForFinancialPlan();
-                            hypothesisTextToAdd = null;
-                        } else {
-                            $('#error-message').text(result.message);
-                            $('#errorModal').modal('show');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        $('#error-message').text('Erreur lors de la communication avec le serveur : ' + error);
-                        $('#errorModal').modal('show');
-                    }
-                });
-            }
-        });
-
         // Préparer la modification d'une hypothèse
         $(document).on('click', '.edit-hypothesis-btn', function() {
             const hypothesisId = $(this).data('id');
@@ -630,7 +408,12 @@ try {
                     const result = JSON.parse(response);
                     if (result.success) {
                         $('#editHypothesisModal').modal('hide');
-                        $('#actionSuccessModal').modal('show').find('#action-success-message').text('Hypothèse modifiée avec succès !');
+                        // Afficher l'icône de confirmation
+                        $('#successIcon').addClass('success-icon-show');
+                        setTimeout(function() {
+                            $('#successIcon').removeClass('success-icon-show');
+                        }, 2000);
+                        // Mettre à jour l'affichage
                         $(`.hypothesis-card[data-id="${result.hypothesis_id}"] p`).html(`${result.hypothesis_text} <span class="status-badge ms-2 ${result.status}">${result.status === 'pending' ? 'En attente' : (result.status === 'confirmed' ? 'Confirmée' : 'Rejetée')}</span>`);
                         $(`.edit-hypothesis-btn[data-id="${result.hypothesis_id}"]`).data('text', result.hypothesis_text);
                         updateProgressBar();
@@ -644,51 +427,6 @@ try {
                     $('#errorModal').modal('show');
                 }
             });
-        });
-
-        // Préparer la suppression d'une hypothèse
-        let hypothesisIdToDelete = null;
-        $(document).on('click', '.delete-hypothesis-btn', function() {
-            hypothesisIdToDelete = $(this).data('id');
-            $('#deleteHypothesisModal').modal('show');
-        });
-
-        // Confirmer la suppression
-        $('#confirm-delete-btn').on('click', function() {
-            if (hypothesisIdToDelete) {
-                $.ajax({
-                    url: 'delete_hypothesis.php',
-                    method: 'POST',
-                    data: { hypothesis_id: hypothesisIdToDelete },
-                    success: function(response) {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            $('#deleteHypothesisModal').modal('hide');
-                            $('#deleteSuccessModal').modal('show');
-                            $(`.hypothesis-card[data-id="${hypothesisIdToDelete}"]`).fadeOut(300, function() {
-                                $(this).remove();
-                                if ($('#hypotheses-list').children().length === 0) {
-                                    $('#hypotheses-list').html('<p class="text-center text-muted">Aucune hypothèse pour ce projet. Générez ou ajoutez-en une ci-dessous !</p>');
-                                }
-                                $('.hypothesis-card').each(function(index) {
-                                    $(this).find('.hypothesis-number').text(index + 1);
-                                    $(this).find('.review-hypothesis-btn').data('index', index);
-                                });
-                                updateProgressBar();
-                                checkProgressForFinancialPlan();
-                            });
-                            hypothesisIdToDelete = null;
-                        } else {
-                            $('#error-message').text('Erreur lors de la suppression : ' + result.message);
-                            $('#errorModal').modal('show');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        $('#error-message').text('Erreur lors de la communication avec le serveur : ' + error);
-                        $('#errorModal').modal('show');
-                    }
-                });
-            }
         });
 
         // Gestion du loader épuré pour "Générer des hypothèses"
@@ -749,16 +487,42 @@ try {
             }
         });
 
-        // Variables pour gérer les actions de confirmation/infirmation
-        let currentAction = null;
-        let hypothesisIdToUpdate = null;
-
-        // Confirmer une hypothèse
+        // Confirmer une hypothèse (action immédiate, sans pop-up)
         $('#confirm-hypothesis-btn').on('click', function() {
-            hypothesisIdToUpdate = $('#review_hypothesis_id').val();
-            currentAction = 'confirm';
-            $('#confirm-action-message').text('Êtes-vous sûr de vouloir confirmer cette hypothèse ?');
-            $('#confirmActionModal').modal('show');
+            const hypothesisId = $('#review_hypothesis_id').val();
+            if (hypothesisId) {
+                $.ajax({
+                    url: 'update_hypothesis_status.php',
+                    method: 'POST',
+                    data: { hypothesis_id: hypothesisId, status: 'confirmed', test_plan: '' },
+                    success: function(response) {
+                        const result = JSON.parse(response);
+                        if (result.success) {
+                            $('#reviewHypothesisModal').modal('hide');
+                            // Afficher l'icône de confirmation
+                            $('#successIcon').addClass('success-icon-show');
+                            setTimeout(function() {
+                                $('#successIcon').removeClass('success-icon-show');
+                            }, 2000);
+                            // Mettre à jour l'affichage
+                            $(`.hypothesis-card[data-id="${hypothesisId}"] .status-badge`)
+                                .text('Confirmée')
+                                .removeClass('pending confirmed rejected')
+                                .addClass('confirmed');
+                            $(`.review-hypothesis-btn[data-id="${hypothesisId}"]`).data('status', 'confirmed');
+                            updateProgressBar();
+                            checkProgressForFinancialPlan();
+                        } else {
+                            $('#error-message').text('Erreur lors de la mise à jour : ' + result.message);
+                            $('#errorModal').modal('show');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#error-message').text('Erreur lors de la communication avec le serveur : ' + error);
+                        $('#errorModal').modal('show');
+                    }
+                });
+            }
         });
 
         // Infirmer une hypothèse
@@ -771,24 +535,30 @@ try {
 
         // Exécuter l'action après confirmation
         $('#confirm-action-btn').on('click', function() {
-            if (hypothesisIdToUpdate && currentAction) {
+            const hypothesisId = hypothesisIdToUpdate;
+
+            if (hypothesisId && currentAction) {
                 const status = currentAction === 'confirm' ? 'confirmed' : 'rejected';
                 $.ajax({
                     url: 'update_hypothesis_status.php',
                     method: 'POST',
-                    data: { hypothesis_id: hypothesisIdToUpdate, status: status, test_plan: '' },
+                    data: { hypothesis_id: hypothesisId, status: status, test_plan: '' },
                     success: function(response) {
                         const result = JSON.parse(response);
                         if (result.success) {
                             $('#confirmActionModal').modal('hide');
                             $('#reviewHypothesisModal').modal('hide');
-                            $('#action-success-message').text(status === 'confirmed' ? 'L\'hypothèse a été confirmée avec succès !' : 'L\'hypothèse a été infirmée avec succès !');
-                            $('#actionSuccessModal').modal('show');
-                            $(`.hypothesis-card[data-id="${hypothesisIdToUpdate}"] .status-badge`)
+                            // Afficher l'icône de confirmation
+                            $('#successIcon').addClass('success-icon-show');
+                            setTimeout(function() {
+                                $('#successIcon').removeClass('success-icon-show');
+                            }, 2000);
+                            // Mettre à jour l'affichage
+                            $(`.hypothesis-card[data-id="${hypothesisId}"] .status-badge`)
                                 .text(status === 'confirmed' ? 'Confirmée' : 'Rejetée')
                                 .removeClass('pending confirmed rejected')
                                 .addClass(status);
-                            $(`.review-hypothesis-btn[data-id="${hypothesisIdToUpdate}"]`).data('status', status);
+                            $(`.review-hypothesis-btn[data-id="${hypothesisId}"]`).data('status', status);
                             updateProgressBar();
                             checkProgressForFinancialPlan();
                             hypothesisIdToUpdate = null;
@@ -804,6 +574,9 @@ try {
                     }
                 });
             }
+            // Réinitialiser les données de l'action
+            $(this).data('action', null);
+            $(this).data('hypothesis_id', null);
         });
 
         // Enregistrer le plan de test
@@ -818,8 +591,11 @@ try {
                     const result = JSON.parse(response);
                     if (result.success) {
                         $(`.review-hypothesis-btn[data-id="${hypothesisId}"]`).data('test-plan', testPlan);
-                        $('#action-success-message').text('Plan de test enregistré avec succès !');
-                        $('#actionSuccessModal').modal('show');
+                        // Afficher l'icône de confirmation
+                        $('#successIcon').addClass('success-icon-show');
+                        setTimeout(function() {
+                            $('#successIcon').removeClass('success-icon-show');
+                        }, 2000);
                     } else {
                         $('#error-message').text('Erreur lors de la mise à jour : ' + result.message);
                         $('#errorModal').modal('show');
@@ -847,15 +623,15 @@ try {
             const confirmed = $('.hypothesis-card .status-badge.confirmed').length;
             const percentage = total > 0 ? (confirmed / total) * 100 : 0;
             if (percentage === 100) {
-                if (!$('.action-buttons .btn-success').length) {
-                    $('.action-buttons').append(`
+                if (!$('.visualisation-actions .btn-success').length) {
+                    $('.visualisation-actions').append(`
                         <a href="financial_plan.php?project_id=<?= $project_id ?>" class="btn btn-success">
                             <i class="bi bi-calculator"></i> Passer au Plan Financier
                         </a>
                     `);
                 }
             } else {
-                $('.action-buttons .btn-success').remove();
+                $('.visualisation-actions .btn-success').parent('.action-button-group').remove();
             }
         }
 
@@ -865,3 +641,8 @@ try {
     </script>
 </body>
 </html>
+
+<?php
+// Libérer le buffer de sortie
+ob_end_flush();
+?>

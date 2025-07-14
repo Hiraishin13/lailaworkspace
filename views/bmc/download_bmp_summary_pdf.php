@@ -7,6 +7,9 @@ require_once BASE_DIR . '/includes/db_connect.php';
 require_once BASE_DIR . '/includes/config.php';
 require_once BASE_DIR . '/vendor/autoload.php';
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -54,52 +57,50 @@ try {
     $stmt->execute(['project_id' => $project_id]);
     $financial_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Récupérer les sections du BMC depuis la table bmc_sections
-    $stmt = $pdo->prepare("SELECT block_name, content FROM bmc_sections WHERE project_id = :project_id");
+    // Récupérer les sections du BMC depuis la table bmc (au lieu de bmc_sections)
+    $stmt = $pdo->prepare("SELECT block_name, content FROM bmc WHERE project_id = :project_id");
     $stmt->execute(['project_id' => $project_id]);
     $bmc_data = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
-    // Mapper les noms des blocs pour correspondre à ceux utilisés dans le HTML
-    $bmc_sections = [
-        'key_partnerships' => $bmc_data['key_partnerships'] ?? 'Non spécifié',
-        'key_resources' => $bmc_data['key_resources'] ?? 'Non spécifié',
-        'customer_segments' => $bmc_data['customer_segments'] ?? 'Non spécifié',
-        'key_activities' => $bmc_data['key_activities'] ?? 'Non spécifié',
-        'value_propositions' => $bmc_data['value_propositions'] ?? 'Non spécifié',
-        'channels' => $bmc_data['channels'] ?? 'Non spécifié',
-        'cost_structure' => $bmc_data['cost_structure'] ?? 'Non spécifié',
-        'revenue_streams' => $bmc_data['revenue_streams'] ?? 'Non spécifié',
-        'customer_relationships' => $bmc_data['customer_relationships'] ?? 'Non spécifié'
+    // Mapper les noms des blocs de la table bmc aux clés attendues (traduire les clés françaises en anglais)
+    $key_mapping = [
+        'proposition_valeur' => 'value_propositions',
+        'segments_clientele' => 'customer_segments',
+        'canaux' => 'channels',
+        'relations_clients' => 'customer_relationships',
+        'activites_cles' => 'key_activities',
+        'ressources_cles' => 'key_resources',
+        'partenaires_cles' => 'key_partnerships',
+        'structure_couts' => 'cost_structure',
+        'sources_revenus' => 'revenue_streams'
     ];
+
+    // Initialiser $bmc_sections avec les clés attendues
+    $bmc_sections = [
+        'key_partnerships' => 'Non spécifié',
+        'key_resources' => 'Non spécifié',
+        'customer_segments' => 'Non spécifié',
+        'key_activities' => 'Non spécifié',
+        'value_propositions' => 'Non spécifié',
+        'channels' => 'Non spécifié',
+        'cost_structure' => 'Non spécifié',
+        'revenue_streams' => 'Non spécifié',
+        'customer_relationships' => 'Non spécifié'
+    ];
+
+    // Remplir $bmc_sections avec les données de bmc en utilisant le mapping
+    foreach ($key_mapping as $french_key => $english_key) {
+        if (isset($bmc_data[$french_key])) {
+            $bmc_sections[$english_key] = $bmc_data[$french_key];
+        }
+    }
 } catch (PDOException $e) {
     $_SESSION['error'] = "Erreur lors de la récupération des données du BMP : " . $e->getMessage();
     header('Location: bmp_summary.php?project_id=' . $project_id);
     exit();
 }
 
-// Initialiser TCPDF
-$tcpdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-// Définir les métadonnées du document
-$tcpdf->SetCreator(PDF_CREATOR);
-$tcpdf->SetAuthor($_SESSION['user_name'] ?? 'Laila Workspace');
-$tcpdf->SetTitle('Récapitulatif du BMP - ' . $project['name']);
-$tcpdf->SetSubject('Résumé du Business Model Plan');
-$tcpdf->SetKeywords('BMP, Résumé, Business Model');
-
-// Définir les marges
-$tcpdf->SetMargins(20, 20, 20);
-$tcpdf->SetHeaderMargin(0);
-$tcpdf->SetFooterMargin(10);
-
-// Désactiver l'en-tête et le pied de page par défaut de TCPDF
-$tcpdf->setPrintHeader(false);
-$tcpdf->setPrintFooter(false);
-
-// Ajouter une page
-$tcpdf->AddPage();
-
-// Créer le contenu HTML avec le même design que download_bmc_pdf.php
+// Créer le contenu HTML avec le design aligné sur download_bmc_pdf.php et download_hypotheses_pdf.php
 $html = '
 <!DOCTYPE html>
 <html lang="fr">
@@ -108,7 +109,7 @@ $html = '
     <title>Récapitulatif du BMP - Laila Workspace</title>
     <style>
         body { 
-            font-family: Helvetica, sans-serif; 
+            font-family: Arial, sans-serif; 
             margin: 0;
             padding: 0;
         }
@@ -122,10 +123,6 @@ $html = '
         .header h1 {
             margin: 0;
             font-size: 24px;
-        }
-        .header img {
-            max-height: 50px;
-            margin-bottom: 10px;
         }
         .container {
             padding: 20px;
@@ -142,17 +139,14 @@ $html = '
         .text-muted { 
             color: #6c757d; 
         }
-        .bmc-card { 
-            border: 1px solid #ddd; 
-            padding: 15px; 
-            margin-bottom: 10px; 
-            text-align: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .bmc-container, .hypothesis-container, .financial-container { 
+            margin: 20px 0; 
         }
-        .financial-card { 
+        .bmc-card, .hypothesis-card, .financial-card { 
             border: 1px solid #ddd; 
             padding: 15px; 
             margin-bottom: 10px; 
+            text-align: left; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         table { 
@@ -169,9 +163,6 @@ $html = '
             background-color: #f8f9fa; 
             color: #0d6efd; 
         }
-        ul { 
-            padding-left: 20px; 
-        }
         .footer {
             position: fixed;
             bottom: 0;
@@ -186,8 +177,6 @@ $html = '
 </head>
 <body>
     <div class="header">
-        <!-- Si vous avez un logo, décommentez la ligne suivante et ajustez le chemin -->
-        <!-- <img src="' . BASE_DIR . '/assets/images/logo.png" alt="Laila Workspace Logo"> -->
         <h1>Laila Workspace</h1>
     </div>
     <div class="container">
@@ -200,35 +189,14 @@ $html = '
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
-                        <h5>Partenaires Clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_partnerships']) . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Ressources Clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_resources']) . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Segments de Clientèle</h5>
-                        <p class="text-muted">' . htmlspecialchars($bmc_sections['customer_segments']) . '</p>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Activités Clés</h5>
-                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_activities']) . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Proposition de Valeur</h5>
+                        <h5>Proposition de valeur</h5>
                         <p class="text-muted">' . htmlspecialchars($bmc_sections['value_propositions']) . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Segments de clientèle</h5>
+                        <p class="text-muted">' . htmlspecialchars($bmc_sections['customer_segments']) . '</p>
                     </div>
                 </div>
                 <div style="flex: 1 1 30%;">
@@ -242,38 +210,66 @@ $html = '
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
-                        <h5>Structure des Coûts</h5>
+                        <h5>Relations clients</h5>
+                        <p class="text-muted">' . htmlspecialchars($bmc_sections['customer_relationships']) . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Activités clés</h5>
+                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_activities']) . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Ressources clés</h5>
+                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_resources']) . '</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Partenaires clés</h5>
+                        <p class="text-muted">' . htmlspecialchars($bmc_sections['key_partnerships']) . '</p>
+                    </div>
+                </div>
+                <div style="flex: 1 1 30%;">
+                    <div class="bmc-card">
+                        <h5>Structure des coûts</h5>
                         <p class="text-muted">' . htmlspecialchars($bmc_sections['cost_structure']) . '</p>
                     </div>
                 </div>
                 <div style="flex: 1 1 30%;">
                     <div class="bmc-card">
-                        <h5>Sources de Revenus</h5>
+                        <h5>Sources de revenus</h5>
                         <p class="text-muted">' . htmlspecialchars($bmc_sections['revenue_streams']) . '</p>
-                    </div>
-                </div>
-                <div style="flex: 1 1 30%;">
-                    <div class="bmc-card">
-                        <h5>Relations Clients</h5>
-                        <p class="text-muted">' . htmlspecialchars($bmc_sections['customer_relationships']) . '</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <h4>Hypothèses Validées</h4>';
+        <h4>Hypothèses Validées</h4>
+        <div class="hypothesis-container">';
 if (empty($hypotheses)) {
     $html .= '<p class="text-muted">Aucune hypothèse validée pour ce projet.</p>';
 } else {
-    $html .= '<ul>';
+    $index = 1;
     foreach ($hypotheses as $hypothesis) {
-        $html .= '<li>' . htmlspecialchars($hypothesis['hypothesis_text'] ?? 'Hypothèse non spécifiée') . '</li>';
+        $html .= '
+            <div class="hypothesis-card">
+                <p><strong>' . $index . '.</strong> ' . htmlspecialchars($hypothesis['hypothesis_text'] ?? 'Hypothèse non spécifiée') . '</p>
+            </div>';
+        $index++;
     }
-    $html .= '</ul>';
 }
 
 $html .= '
-        <h4>Données Financières</h4>';
+        </div>
+
+        <h4>Données Financières</h4>
+        <div class="financial-container">';
 if ($financial_data) {
     $html .= '
         <div class="financial-card">
@@ -290,6 +286,7 @@ if ($financial_data) {
 }
 
 $html .= '
+        </div>
     </div>
     <div class="footer">
         Généré par Laila Workspace - ' . date('Y') . '
@@ -297,11 +294,24 @@ $html .= '
 </body>
 </html>';
 
-// Écrire le HTML dans le PDF
-$tcpdf->writeHTML($html, true, false, true, false, '');
+// Initialiser Dompdf
+$options = new Options();
+$options->set('isHtml5ParserEnabled', true);
+$options->set('isRemoteEnabled', false);
+$dompdf = new Dompdf($options);
 
-// Générer le PDF et le télécharger
+// Charger le HTML dans Dompdf
+$dompdf->loadHtml($html);
+
+// Définir le format de la page (A4, portrait)
+$dompdf->setPaper('A4', 'portrait');
+
+// Rendre le PDF
+$dompdf->render();
+
+// Télécharger le PDF
 $project_name = preg_replace('/[^A-Za-z0-9\-]/', '_', $project['name']);
 $file_name = 'BMP_Summary_' . $project_name . '_' . date('Ymd') . '.pdf';
-$tcpdf->Output($file_name, 'D');
+$dompdf->stream($file_name, ['Attachment' => true]);
 exit();
+?>

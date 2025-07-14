@@ -427,7 +427,7 @@
             ],
             "description": "OpenAI PHP is a supercharged PHP API client that allows you to interact with the Open AI API",
             "keywords": [
-                "GPT-3",
+                "gpt-3.5-turbo",
                 "api",
                 "client",
                 "codex",

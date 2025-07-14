@@ -8,7 +8,18 @@ require_once BASE_DIR . '/includes/config.php';
 
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../auth/login.php');
+    // Définir le chemin de redirection
+    $login_path = '/views/auth/login.php'; // Chemin relatif par rapport à BASE_URL
+
+    // Si on est en local (WAMP), on peut utiliser le chemin absolu pour le développement
+    if (defined('BASE_URL') && strpos(BASE_URL, 'localhost') !== false) {
+        $login_path = 'C:/wamp64/www/laila_workspace/views/auth/login.php';
+        // Redirection avec un chemin absolu (pour le développement local uniquement)
+        header('Location: file:///' . str_replace('\\', '/', $login_path));
+    } else {
+        // Redirection avec BASE_URL pour un environnement serveur
+        header('Location: ' . BASE_URL . $login_path);
+    }
     exit();
 }
 
@@ -100,6 +111,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_account'])) {
     }
 }
 
+// Supprimer le compte de l'utilisateur
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
+    try {
+        // Supprimer la photo de profil si elle existe
+        if ($user['profile_picture'] && file_exists(BASE_DIR . $user['profile_picture'])) {
+            unlink(BASE_DIR . $user['profile_picture']);
+        }
+
+        // Supprimer l'utilisateur (les projets associés seront supprimés automatiquement grâce à ON DELETE CASCADE)
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = :id");
+        $stmt->execute(['id' => $_SESSION['user_id']]);
+
+        // Déconnecter l'utilisateur
+        session_unset();
+        session_destroy();
+
+        // Rediriger vers la page de connexion avec un message de succès
+        $_SESSION['success'] = "Votre compte a été supprimé avec succès.";
+        header('Location: ' . BASE_URL . '/views/auth/login.php');
+        exit();
+    } catch (PDOException $e) {
+        $_SESSION['error'] = "Erreur lors de la suppression du compte : " . $e->getMessage();
+        header("Location: settings.php");
+        exit();
+    }
+}
+
 // Charger l'historique des BMP
 $projects = [];
 try {
@@ -125,6 +163,16 @@ try {
     <?php include './layouts/navbar.php'; ?>
 
     <div class="container my-5">
+        <div class="settings-grid">
+        <!-- Section info/conseil utilisateur -->
+        <div class="user-info-box mb-4" style="grid-column: 1 / -1;">
+            <i class="bi bi-info-circle"></i>
+            <div>
+                <strong>Bienvenue dans vos paramètres !</strong><br>
+                Ici, vous pouvez gérer votre compte, personnaliser votre profil, consulter l’historique de vos projets et supprimer votre compte si besoin.<br>
+                <span class="text-muted">Astuce : gardez votre profil à jour pour une expérience optimale sur Laila Workspace.</span>
+            </div>
+        </div>
         <!-- Afficher les messages d'erreur ou de succès -->
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -141,10 +189,10 @@ try {
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
-        <h2 class="section-title text-center mb-5">Paramètres</h2>
+        <h2 class="section-title text-center mb-5">Paramètres du compte</h2>
 
         <!-- Gestion du compte -->
-        <div class="settings-section">
+        <div class="settings-section mb-5">
             <h4 class="text-primary mb-4"><i class="bi bi-person-circle me-2"></i> Gestion du Compte</h4>
             <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="update_account" value="1">
@@ -172,10 +220,94 @@ try {
                     <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Mettre à Jour</button>
                 </div>
             </form>
+
+            <!-- Bouton pour supprimer le compte -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="bi bi-trash"></i> Supprimer mon compte
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Préférences utilisateur -->
+        <div class="settings-section mb-5">
+            <h4 class="text-primary mb-4"><i class="bi bi-sliders me-2"></i> Préférences</h4>
+            <form method="POST">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">Thème de l’interface</label>
+                        <select class="form-select" name="theme" disabled>
+                            <option value="light">Clair</option>
+                            <option value="dark">Sombre</option>
+                        </select>
+                        <small class="form-text text-muted">(Bientôt disponible)</small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">Langue</label>
+                        <select class="form-select" name="lang" disabled>
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                        </select>
+                        <small class="form-text text-muted">(Bientôt disponible)</small>
+                    </div>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifEmail" name="notif_email" checked disabled>
+                    <label class="form-check-label" for="notifEmail">Recevoir les notifications importantes par email <span class="text-muted">(Bientôt disponible)</span></label>
+                </div>
+            </form>
+        </div>
+
+        <!-- Section Sécurité -->
+        <div class="settings-section mb-5">
+            <h4 class="text-primary mb-4"><i class="bi bi-shield-lock me-2"></i> Sécurité</h4>
+            <ul class="list-group mb-3">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Dernière connexion</span>
+                    <span class="badge bg-light text-primary"><?php echo date('d/m/Y H:i', $_SESSION['last_login'] ?? time()); ?></span>
+                </li>
+            </ul>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="../auth/logout.php" class="btn btn-outline-primary"><i class="bi bi-box-arrow-right"></i> Déconnexion partout</a>
+                <a href="../auth/forgot_password.php" class="btn btn-outline-secondary"><i class="bi bi-key"></i> Réinitialiser le mot de passe</a>
+            </div>
+        </div>
+
+        <!-- Section Support & Aide -->
+        <div class="settings-section mb-5">
+            <h4 class="text-primary mb-4"><i class="bi bi-question-circle me-2"></i> Support & Aide</h4>
+            <ul class="list-group mb-3">
+                <li class="list-group-item"><a href="/views/pages/guide.php" class="text-decoration-none"><i class="bi bi-journal-text me-2"></i> Guide d’utilisation</a></li>
+                <li class="list-group-item"><a href="mailto:support@lailaworkspace.com" class="text-decoration-none"><i class="bi bi-envelope me-2"></i> Contacter le support</a></li>
+                <li class="list-group-item"><a href="/views/pages/terms.php" class="text-decoration-none"><i class="bi bi-file-earmark-text me-2"></i> Conditions d’utilisation</a></li>
+            </ul>
+            <div class="alert alert-info mb-0"><i class="bi bi-lightbulb me-2"></i> Pour toute question, consultez la FAQ ou contactez notre équipe !</div>
+        </div>
+
+        <!-- Modal de confirmation pour la suppression -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteAccountModalLabel">Confirmer la suppression</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et supprimera toutes vos données, y compris vos projets.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <form method="POST">
+                            <input type="hidden" name="delete_account" value="1">
+                            <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Historique des BMP -->
-        <div class="history-section mt-5">
+        <div class="history-section mt-5 mb-5">
             <h4 class="text-primary mb-4"><i class="bi bi-clock-history me-2"></i> Historique des BMP Créés</h4>
             <?php if (empty($projects)): ?>
                 <p class="text-muted">Aucun projet créé pour le moment.</p>
@@ -206,10 +338,28 @@ try {
                 </div>
             <?php endif; ?>
         </div>
+        <!-- fin des sections -->
+    </div>
     </div>
 
     <?php include './layouts/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            flex: 1 0 auto;
+            padding-bottom: 60px; /* Plus d'espace pour séparer du footer */
+        }
+        .footer-modern {
+            flex-shrink: 0;
+            width: 100%;
+            margin-top: auto; /* Pousse le footer vers le bas */
+        }
+    </style>
 </body>
 </html>

@@ -226,7 +226,7 @@ if ($financial_data && isset($_GET['generate_forecast']) && $_GET['generate_fore
                     <i class="bi bi-file-earmark-pdf"></i> Télécharger en PDF
                 </a>
                 <a href="bmp_summary.php?project_id=<?= $project_id ?>" class="btn btn-success">
-                    <i class="bi bi-file-earmark-text"></i> Voir le Récapitulatif du BMP
+                    <i class="bi bi-file-earmark-text"></i> Voir le Récapitulatif du BMC
                 </a>
             <?php endif; ?>
             <a href="hypotheses.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary">

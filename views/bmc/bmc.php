@@ -108,7 +108,7 @@ if (!$bmc) {
 
         <!-- Bouton pour modifier -->
         <div class="text-center mb-5">
-            <a href="<?= BASE_URL ?>/views/bmc/edit_bmc.php?bmc_id=<?= $bmc_id ?? 'temp' ?>" class="btn btn-primary rounded-3 px-4">
+            <a href="<?= BASE_URL ?>/views/bmc/edit_bmc.php?bmc_id=<?= $bmc_id ?? 'temp' ?>" class="btn btn-primary px-4">
                 <i class="bi bi-pencil-square me-2"></i>Modifier le BMP
             </a>
         </div>
@@ -129,7 +129,7 @@ if (!$bmc) {
                     </p>
                 </div>
                 <div class="modal-footer">
-                    <a href="<?= BASE_URL ?>/views/auth/register.php" class="btn btn-primary rounded-3 px-4">
+                    <a href="<?= BASE_URL ?>/views/auth/register.php" class="btn btn-primary px-4">
                         <i class="bi bi-person-plus me-2"></i>S'inscrire
                     </a>
                 </div>

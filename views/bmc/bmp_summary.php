@@ -43,6 +43,7 @@ try {
 $hypotheses = [];
 $financial_data = null;
 $call_to_action = '';
+$bmc_blocks = [];
 try {
     // Hypothèses validées
     $stmt = $pdo->prepare("SELECT hypothesis_text, status FROM hypotheses WHERE project_id = :project_id AND status = 'confirmed'");
@@ -53,6 +54,11 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM financial_plans WHERE project_id = :project_id");
     $stmt->execute(['project_id' => $project_id]);
     $financial_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Récupérer les blocs du BMC
+    $stmt = $pdo->prepare("SELECT block_name, content FROM bmc WHERE project_id = :project_id");
+    $stmt->execute(['project_id' => $project_id]);
+    $bmc_blocks = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
     // Récupérer l'appel à action le plus récent depuis la base de données
     $stmt = $pdo->prepare("SELECT call_to_action FROM project_ctas WHERE project_id = :project_id ORDER BY created_at DESC LIMIT 1");
@@ -130,6 +136,64 @@ if (isset($_GET['generate_cta']) && $_GET['generate_cta'] == 1) {
                 <h5>Description du Projet</h5>
                 <p class="text-muted"><?= htmlspecialchars($project['description']) ?></p>
 
+                <h5 class="mt-4">Blocs du Business Model Canvas</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Proposition de valeur</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['proposition_valeur'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Segments de clientèle</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['segments_clientele'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Canaux</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['canaux'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Relations clients</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['relations_clients'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Sources de revenus</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['sources_revenus'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Ressources clés</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['ressources_cles'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Activités clés</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['activites_cles'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Partenaires clés</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['partenaires_cles'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bmc-card h-100">
+                            <h6>Structure des coûts</h6>
+                            <p class="text-muted"><?= htmlspecialchars($bmc_blocks['structure_couts'] ?? 'Non spécifié') ?></p>
+                        </div>
+                    </div>
+                </div>
+
                 <h5 class="mt-4">Hypothèses Validées</h5>
                 <?php if (empty($hypotheses)): ?>
                     <p class="text-muted">Aucune hypothèse validée pour ce projet.</p>
@@ -144,11 +208,11 @@ if (isset($_GET['generate_cta']) && $_GET['generate_cta'] == 1) {
                 <h5 class="mt-4">Données Financières</h5>
                 <?php if ($financial_data): ?>
                     <table class="table table-bordered">
-                        <tr><th>Revenus Mensuels Estimés (€)</th><td><?= number_format($financial_data['revenues'], 2) ?></td></tr>
-                        <tr><th>Coûts Fixes Mensuels (€)</th><td><?= number_format($financial_data['fixed_costs'], 2) ?></td></tr>
-                        <tr><th>Coûts Variables Mensuels (€)</th><td><?= number_format($financial_data['variable_costs'], 2) ?></td></tr>
-                        <tr><th>Prix de Vente Unitaire (€)</th><td><?= number_format($financial_data['unit_price'], 2) ?></td></tr>
-                        <tr><th>Coût Variable Unitaire (€)</th><td><?= number_format($financial_data['unit_variable_cost'], 2) ?></td></tr>
+                        <tr><th>Revenus Mensuels Estimés ($)</th><td><?= number_format($financial_data['revenues'], 2) ?></td></tr>
+                        <tr><th>Coûts Fixes Mensuels ($)</th><td><?= number_format($financial_data['fixed_costs'], 2) ?></td></tr>
+                        <tr><th>Coûts Variables Mensuels ($)</th><td><?= number_format($financial_data['variable_costs'], 2) ?></td></tr>
+                        <tr><th>Prix de Vente Unitaire ($)</th><td><?= number_format($financial_data['unit_price'], 2) ?></td></tr>
+                        <tr><th>Coût Variable Unitaire ($)</th><td><?= number_format($financial_data['unit_variable_cost'], 2) ?></td></tr>
                     </table>
                 <?php else: ?>
                     <p class="text-muted">Aucune donnée financière disponible.</p>

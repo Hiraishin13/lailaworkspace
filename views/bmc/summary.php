@@ -108,10 +108,10 @@ if (!$bmc) {
 
         <!-- Options d'export -->
         <div class="text-center mb-5">
-            <button class="btn btn-export rounded-3 px-4 me-2">
+            <button class="btn btn-export px-4 me-2">
                 <i class="bi bi-file-earmark-pdf me-2"></i>Exporter en PDF
             </button>
-            <button class="btn btn-outline-primary rounded-3 px-4">
+            <button class="btn btn-outline-primary px-4">
                 <i class="bi bi-share me-2"></i>Partager
             </button>
         </div>
@@ -122,7 +122,7 @@ if (!$bmc) {
             <p class="text-muted mb-4">
                 Présentez votre BMP à des investisseurs ou testez vos hypothèses sur le terrain !
             </p>
-            <a href="<?= BASE_URL ?>/views/index.php" class="btn btn-primary rounded-3 px-4">
+            <a href="<?= BASE_URL ?>/views/index.php" class="btn btn-primary px-4">
                 <i class="bi bi-rocket-takeoff me-2"></i>Créer un nouveau BMP
             </a>
         </div>

@@ -7,6 +7,9 @@ require_once BASE_DIR . '/includes/db_connect.php';
 require_once BASE_DIR . '/includes/config.php';
 require_once BASE_DIR . '/vendor/autoload.php';
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -90,29 +93,7 @@ if ($financial_data) {
     ];
 }
 
-// Initialiser TCPDF
-$tcpdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-// Définir les métadonnées du document
-$tcpdf->SetCreator(PDF_CREATOR);
-$tcpdf->SetAuthor($_SESSION['user_name'] ?? 'Laila Workspace');
-$tcpdf->SetTitle('Plan Financier - ' . $project['name']);
-$tcpdf->SetSubject('Plan Financier du Projet');
-$tcpdf->SetKeywords('Plan Financier, Prévisions, Seuil de Rentabilité, Faisabilité');
-
-// Définir les marges
-$tcpdf->SetMargins(20, 20, 20);
-$tcpdf->SetHeaderMargin(0);
-$tcpdf->SetFooterMargin(10);
-
-// Désactiver l'en-tête et le pied de page par défaut de TCPDF
-$tcpdf->setPrintHeader(false);
-$tcpdf->setPrintFooter(false);
-
-// Ajouter une page
-$tcpdf->AddPage();
-
-// Créer le contenu HTML avec le même design que download_bmc_pdf.php
+// Créer le contenu HTML avec le design aligné sur download_bmc_pdf.php, download_hypotheses_pdf.php et download_bmp_summary.php
 $html = '
 <!DOCTYPE html>
 <html lang="fr">
@@ -121,7 +102,7 @@ $html = '
     <title>Plan Financier - Laila Workspace</title>
     <style>
         body { 
-            font-family: Helvetica, sans-serif; 
+            font-family: Arial, sans-serif; 
             margin: 0;
             padding: 0;
         }
@@ -151,10 +132,14 @@ $html = '
         .text-muted { 
             color: #6c757d; 
         }
+        .financial-container { 
+            margin: 20px 0; 
+        }
         .financial-card { 
             border: 1px solid #ddd; 
             padding: 15px; 
             margin-bottom: 10px; 
+            text-align: left; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         table { 
@@ -193,62 +178,70 @@ $html = '
         <p class="text-muted">' . htmlspecialchars($project['description']) . '</p>
 
         <h4>Données Financières</h4>
-        <div class="financial-card">
-            <table>
-                <tr><td><strong>Revenus Mensuels Estimés (€)</strong></td><td>' . number_format($financial_data['revenues'] ?? 0, 2) . '</td></tr>
-                <tr><td><strong>Coûts Fixes Mensuels (€)</strong></td><td>' . number_format($financial_data['fixed_costs'] ?? 0, 2) . '</td></tr>
-                <tr><td><strong>Coûts Variables Mensuels (€)</strong></td><td>' . number_format($financial_data['variable_costs'] ?? 0, 2) . '</td></tr>
-                <tr><td><strong>Prix de Vente Unitaire (€)</strong></td><td>' . number_format($financial_data['unit_price'] ?? 0, 2) . '</td></tr>
-                <tr><td><strong>Coût Variable Unitaire (€)</strong></td><td>' . number_format($financial_data['unit_variable_cost'] ?? 0, 2) . '</td></tr>';
+        <div class="financial-container">
+            <div class="financial-card">
+                <table>
+                    <tr><td><strong>Revenus Mensuels Estimés (€)</strong></td><td>' . number_format($financial_data['revenues'] ?? 0, 2) . '</td></tr>
+                    <tr><td><strong>Coûts Fixes Mensuels (€)</strong></td><td>' . number_format($financial_data['fixed_costs'] ?? 0, 2) . '</td></tr>
+                    <tr><td><strong>Coûts Variables Mensuels (€)</strong></td><td>' . number_format($financial_data['variable_costs'] ?? 0, 2) . '</td></tr>
+                    <tr><td><strong>Prix de Vente Unitaire (€)</strong></td><td>' . number_format($financial_data['unit_price'] ?? 0, 2) . '</td></tr>
+                    <tr><td><strong>Coût Variable Unitaire (€)</strong></td><td>' . number_format($financial_data['unit_variable_cost'] ?? 0, 2) . '</td></tr>';
 if ($financial_data && $financial_data['uploaded_file_path']) {
     $html .= '<tr><td><strong>Fichier Uploadé</strong></td><td>' . htmlspecialchars(basename($financial_data['uploaded_file_path'])) . '</td></tr>';
 }
 $html .= '</table>
+            </div>
         </div>';
 
 if (!empty($forecast_data)) {
     $html .= '
         <h4>Prévisions Financières (12 mois)</h4>
-        <div class="financial-card">
-            <table>
-                <tr>
-                    <th>Mois</th>
-                    <th>Revenus (€)</th>
-                    <th>Coûts Totaux (€)</th>
-                    <th>Bénéfice (€)</th>
-                </tr>';
+        <div class="financial-container">
+            <div class="financial-card">
+                <table>
+                    <tr>
+                        <th>Mois</th>
+                        <th>Revenus (€)</th>
+                        <th>Coûts Totaux (€)</th>
+                        <th>Bénéfice (€)</th>
+                    </tr>';
     foreach ($forecast_data as $data) {
         $html .= '
-                <tr>
-                    <td>' . $data['month'] . '</td>
-                    <td>' . number_format($data['revenues'], 2) . '</td>
-                    <td>' . number_format($data['total_costs'], 2) . '</td>
-                    <td>' . number_format($data['profit'], 2) . '</td>
-                </tr>';
+                    <tr>
+                        <td>' . $data['month'] . '</td>
+                        <td>' . number_format($data['revenues'], 2) . '</td>
+                        <td>' . number_format($data['total_costs'], 2) . '</td>
+                        <td>' . number_format($data['profit'], 2) . '</td>
+                    </tr>';
     }
     $html .= '</table>
+            </div>
         </div>';
 }
 
 $html .= '
         <h4>Seuil de Rentabilité</h4>
-        <div class="financial-card">';
+        <div class="financial-container">
+            <div class="financial-card">';
 if ($break_even_point !== null) {
     $html .= '<p>Vous devez vendre ' . round($break_even_point) . ' unités pour atteindre le seuil de rentabilité.</p>';
 } else {
     $html .= '<p class="text-muted">Impossible de calculer le seuil de rentabilité. Vérifiez que le prix de vente unitaire est supérieur au coût variable unitaire et que les coûts fixes sont définis.</p>';
 }
-$html .= '</div>';
+$html .= '</div>
+        </div>';
 
 if (!empty($feasibility_kpis)) {
     $html .= '
         <h4>Analyse de Faisabilité</h4>
-        <div class="financial-card">
-            <table>
-                <tr><td><strong>Marge Brute</strong></td><td>' . round($feasibility_kpis['gross_margin'], 2) . '%</td><td class="text-muted">Une marge brute supérieure à 30% est généralement un bon indicateur.</td></tr>
-                <tr><td><strong>Taux de Croissance Mensuel</strong></td><td>' . round($feasibility_kpis['monthly_growth_rate'], 2) . '%</td><td class="text-muted">Un taux de croissance supérieur à 5% est un bon signe.</td></tr>
-                <tr><td><strong>Temps pour Atteindre le Seuil</strong></td><td>' . ($feasibility_kpis['time_to_break_even'] ? $feasibility_kpis['time_to_break_even'] . ' mois' : 'N/A') . '</td><td class="text-muted">Un délai inférieur à 12 mois est idéal.</td></tr>
-            </table>
+        <div class="financial-container">
+            <div class="financial-card">
+                <table>
+                    <tr><td><strong>Marge Brute</strong></td><td>' . round($feasibility_kpis['gross_margin'], 2) . '%</td><td class="text-muted">Une marge brute supérieure à 30% est généralement un bon indicateur.</td></tr>
+                    <tr><td><strong>Taux de Croissance Mensuel</strong></td><td>' . round($feasibility_kpis['monthly_growth_rate'], 2) . '%</td><td class="text-muted">Un taux de croissance supérieur à 5% est un bon signe.</td></tr>
+                    <tr><td><strong>Temps pour Atteindre le Seuil</strong></td><td>' . ($feasibility_kpis['time_to_break_even'] ? $feasibility_kpis['time_to_break_even'] . ' mois' : 'N/A') . '</td><td class="text-muted">Un délai inférieur à 12 mois est idéal.</td></tr>
+                </table>
+            </div>
         </div>';
 }
 
@@ -260,9 +253,24 @@ $html .= '
 </body>
 </html>';
 
-// Écrire le HTML dans le PDF
-$tcpdf->writeHTML($html, true, false, true, false, '');
+// Initialiser Dompdf
+$options = new Options();
+$options->set('isHtml5ParserEnabled', true);
+$options->set('isRemoteEnabled', false);
+$dompdf = new Dompdf($options);
 
-// Générer le PDF et le télécharger
-$tcpdf->Output('Plan_Financier_' . $project['name'] . '.pdf', 'D');
+// Charger le HTML dans Dompdf
+$dompdf->loadHtml($html);
+
+// Définir le format de la page (A4, portrait)
+$dompdf->setPaper('A4', 'portrait');
+
+// Rendre le PDF
+$dompdf->render();
+
+// Télécharger le PDF
+$project_name = preg_replace('/[^A-Za-z0-9\-]/', '_', $project['name']);
+$file_name = 'Plan_Financier_' . $project_name . '_' . date('Ymd') . '.pdf';
+$dompdf->stream($file_name, ['Attachment' => true]);
 exit();
+?>
