@@ -1,7 +1,7 @@
 <?php
 // Définir la constante BASE_URL pour les chemins absolus
 if (!defined('BASE_URL')) {
-    define('BASE_URL', 'http://localhost/lailaworkspace');
+    define('BASE_URL', 'https://lailaworkspace.com');
 }
 
 // Configuration SMTP pour PHPMailer
@@ -15,9 +15,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Connexion à la base de données locale
+// Connexion à la base de données Hostinger
 try {
-    $pdo = new PDO("mysql:host=localhost;dbname=lailaworkspace_db", "root", "");
+    $pdo = new PDO("mysql:host=localhost;dbname=u343759769_laila_db", "u343759769_Lailaworkspace", "Mauvaisgarcon04.com");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->exec("SET NAMES 'utf8'");
 } catch (PDOException $e) {
