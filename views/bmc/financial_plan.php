@@ -174,6 +174,7 @@ if ($financial_data && isset($_GET['generate_forecast']) && $_GET['generate_fore
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
+
         <h2 class="section-title text-center mb-5">Plan Financier - <?= htmlspecialchars($project['name']) ?></h2>
 
         <!-- Formulaire pour saisir les données financières -->
@@ -211,27 +212,35 @@ if ($financial_data && isset($_GET['generate_forecast']) && $_GET['generate_fore
                     </div>
                 </div>
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer les Données</button>
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-save me-2"></i> Enregistrer les Données
+                    </button>
                 </div>
             </form>
         </div>
 
         <!-- Boutons d'action -->
-        <div class="action-buttons text-center my-5">
-            <?php if ($financial_data): ?>
-                <a href="financial_plan.php?project_id=<?= $project_id ?>&generate_forecast=1" class="btn btn-primary" id="generate-forecast-btn">
-                    <i class="bi bi-graph-up"></i> Générer les Prévisions Financières
-                </a>
-                <a href="download_financial_plan_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary">
-                    <i class="bi bi-file-earmark-pdf"></i> Télécharger en PDF
-                </a>
-                <a href="bmp_summary.php?project_id=<?= $project_id ?>" class="btn btn-success">
-                    <i class="bi bi-file-earmark-text"></i> Voir le Récapitulatif du BMC
-                </a>
-            <?php endif; ?>
-            <a href="hypotheses.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left"></i> Retour aux Hypothèses
-            </a>
+        <div class="action-buttons my-5">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+                        <?php if ($financial_data): ?>
+                            <a href="financial_plan.php?project_id=<?= $project_id ?>&generate_forecast=1" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" id="generate-forecast-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-graph-up me-2"></i> Prévisions Financières
+                            </a>
+                            <a href="download_financial_plan_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Expoter en PDF
+                            </a>
+                            <a href="bmp_summary.php?project_id=<?= $project_id ?>" class="btn btn-success w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-file-earmark-text me-2"></i> Voir le Récapitulatif du BMC
+                            </a>
+                        <?php endif; ?>
+                        <a href="hypotheses.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-arrow-left me-2"></i> Retour aux Hypothèses
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Affichage des prévisions financières -->
@@ -322,9 +331,11 @@ if ($financial_data && isset($_GET['generate_forecast']) && $_GET['generate_fore
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Gestion du loader pour "Générer les prévisions"
+            // Gestion du spinner global pour "Générer les prévisions"
             $('#generate-forecast-btn').on('click', function(e) {
-                $('#loadingModal').modal('show');
+                if (window.showGlobalSpinner) {
+                    window.showGlobalSpinner('Génération des prévisions financières...');
+                }
                 $(this).addClass('disabled').prop('disabled', true);
             });
 

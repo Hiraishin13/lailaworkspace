@@ -325,8 +325,10 @@ unset($_SESSION['error'], $_SESSION['success']);
 <body>
     <div class="auth-container">
         <div class="auth-card">
+            <div class="text-center mb-4">
+                <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Laila Workspace" style="max-width: 120px; height: auto; margin-bottom: 1rem;">
+            </div>
             <h1><i class="fas fa-key me-2"></i>Mot de passe oublié</h1>
-            <p>Entrez votre email ou téléphone pour récupérer votre compte</p>
             
             <?php if ($error_message): ?>
                 <div class="alert alert-danger py-3 text-center mb-3">

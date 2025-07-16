@@ -1,0 +1,450 @@
+/* Styles pour le back-office Laila Workspace */
+
+:root {
+    --admin-primary: #2c3e50;
+    --admin-secondary: #34495e;
+    --admin-success: #27ae60;
+    --admin-warning: #f39c12;
+    --admin-danger: #e74c3c;
+    --admin-info: #3498db;
+    --admin-light: #ecf0f1;
+    --admin-dark: #2c3e50;
+    --admin-border: #dee2e6;
+    --admin-text: #495057;
+    --admin-text-muted: #6c757d;
+}
+
+/* Styles généraux */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--admin-text);
+}
+
+/* Navbar */
+.navbar-dark {
+    background-color: var(--admin-primary) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Sidebar */
+.sidebar, .admin-sidebar {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.sidebar h6, .admin-sidebar h6 {
+    color: var(--admin-primary);
+    font-weight: 600;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--admin-light);
+    padding-bottom: 10px;
+}
+
+/* Navigation */
+.nav-link {
+    color: var(--admin-text);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    background-color: var(--admin-light);
+    color: var(--admin-primary);
+    transform: translateX(5px);
+}
+
+.nav-link.active {
+    background-color: var(--admin-primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(44, 62, 80, 0.3);
+}
+
+.nav-link i {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+/* Cards */
+.admin-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border: none;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+    color: white;
+    padding: 20px 25px;
+    border: none;
+    font-weight: 600;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 25px;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border: 1px solid var(--admin-border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.kpi-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.kpi-content h3 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--admin-primary);
+}
+
+.kpi-content p {
+    margin: 0;
+    color: var(--admin-text-muted);
+    font-size: 0.9rem;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--admin-secondary);
+    border-color: var(--admin-secondary);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+/* Tables */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: var(--admin-light);
+    border-bottom: 2px solid var(--admin-border);
+    font-weight: 600;
+    color: var(--admin-primary);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(44, 62, 80, 0.05);
+}
+
+/* Progress bars */
+.progress {
+    height: 20px;
+    border-radius: 10px;
+    background-color: var(--admin-light);
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
+
+/* Footer */
+footer {
+    background: var(--admin-dark) !important;
+    color: white !important;
+    padding: 1.5rem 0 !important;
+    margin-top: 3rem !important;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+footer h6 {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+footer .text-muted {
+    color: #bdc3c7 !important;
+}
+
+footer .badge {
+    font-size: 0.7rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar, .admin-sidebar {
+        margin-bottom: 20px;
+    }
+    
+    .kpi-card {
+        margin-bottom: 15px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .card-header {
+        padding: 15px 20px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Alertes */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--admin-primary);
+    border-color: var(--admin-border);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--admin-light);
+    color: var(--admin-primary);
+}
+
+/* Stats */
+.metric-card {
+    text-align: center;
+    padding: 20px;
+    background: var(--admin-light);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--admin-border);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--admin-primary);
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: var(--admin-text-muted);
+    margin-top: 5px;
+}
+
+/* Insights */
+.insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.insight-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border-radius: 8px;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
+
+.insight-item:hover {
+    transform: translateX(5px);
+}
+
+.insight-item i {
+    margin-top: 2px;
+    font-size: 1.1rem;
+}
+
+/* Compliance */
+.compliance-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.compliance-item.success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 1px solid #28a745;
+    color: #155724;
+}
+
+.compliance-item i {
+    margin-top: 2px;
+    font-size: 1.2rem;
+}
+
+.compliance-item strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.compliance-item p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Funnel */
+.funnel-step {
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.funnel-step.active {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    transform: scale(1.05);
+}
+
+.funnel-step.inactive {
+    background: var(--admin-light);
+    color: var(--admin-text-muted);
+}
+
+.funnel-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.funnel-label {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.funnel-percentage {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Tooltips */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .navbar, footer {
+        display: none !important;
+    }
+    
+    .admin-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+} 

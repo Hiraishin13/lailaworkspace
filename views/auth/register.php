@@ -92,9 +92,10 @@ unset($_SESSION['error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - Laila Workspace</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../../assets/css/styles.css" rel="stylesheet">
     <style>
         .auth-container {
             min-height: calc(100vh - 80px);
@@ -327,8 +328,10 @@ unset($_SESSION['error']);
 
     <div class="auth-container">
         <div class="auth-card">
-            <h1><i class="fas fa-user-plus me-2"></i>Inscription</h1>
-            <p>Créez votre compte Laila Workspace</p>
+            <div class="text-center mb-4">
+                <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Laila Workspace" style="max-width: 120px; height: auto; margin-bottom: 1rem;">
+            </div>
+
             
             <?php if ($error_message): ?>
                 <div class="alert alert-danger py-3 text-center mb-3">
@@ -413,20 +416,24 @@ unset($_SESSION['error']);
                     </label>
                 </div>
                 
+                <!-- Bouton principal -->
                 <div class="form-actions mb-3">
-                    <button type="button" class="btn btn-light w-100 mb-2" style="border:1px solid #e9ecef; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        <img src='https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg' alt="Google" style="width:20px; height:20px;"> S'inscrire avec Google
-                    </button>
-                    <button type="button" class="btn btn-light w-100 mb-3" style="border:1px solid #e9ecef; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        <img src='https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg' alt="Apple" style="width:20px; height:20px;"> S'inscrire avec Apple
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Inscription
                     </button>
                 </div>
-                <!-- Bouton principal d'inscription -->
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-2"></i>Créer mon compte
-                    </button>
+                <div class="form-actions mb-3">
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-light" style="border:1px solid #e9ecef; display:flex; align-items:center; justify-content:center; padding:8px 16px; gap:8px;">
+                            <img src='https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg' alt="Google" style="width:20px; height:20px;">
+                            <span>Google</span>
+                        </button>
+                        <button type="button" class="btn btn-light" style="border:1px solid #e9ecef; display:flex; align-items:center; justify-content:center; padding:8px 16px; gap:8px;">
+                            <img src='https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg' alt="Apple" style="width:20px; height:20px;">
+                            <span>Apple</span>
+                        </button>
+                    </div>
                 </div>
             </form>
             
@@ -438,7 +445,7 @@ unset($_SESSION['error']);
                 <span style="font-size: 1rem; color: #636e72;">
                     Déjà un compte ? 
                     <a href="<?= BASE_URL ?>/views/auth/login.php" class="text-link">
-                        Connectez-vous
+                        Connexion
                     </a>
                 </span>
             </div>

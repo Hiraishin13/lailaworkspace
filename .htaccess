@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# Redirection simple des URLs avec des chemins Windows
+RewriteCond %{THE_REQUEST} /C:/wamp64/www/ [NC]
+RewriteRule ^(.*)$ /lailaworkspace/$1 [R=301,L]
+
+# Sécurité - Empêcher l'accès aux fichiers sensibles
+<Files "*.sql">
+    Require all denied
+</Files>
+
+<Files "*.log">
+    Require all denied
+</Files>
+
+<Files "composer.*">
+    Require all denied
+</Files>
+
+# Redirection des erreurs 404
+ErrorDocument 404 /lailaworkspace/views/index.php 

@@ -1,18 +1,10 @@
 Réponse API (modèle: gpt-3.5-turbo):
-- Segments de clientèle : Bonjour cible les particuliers et les professionnels qui souhaitent améliorer leur communication écrite en français.
-
-- Proposition de valeur : Bonjour offre un service de correction et de révision de textes de qualité professionnelle, garantissant une communication claire et sans fautes.
-
-- Canaux : Bonjour utilise un site web intuitif pour permettre aux clients de soumettre leurs textes à corriger, ainsi que les réseaux sociaux et le marketing par e-mail pour promouvoir ses services.
-
-- Relations clients : Bonjour favorise des relations clients personnalisées en offrant un service client réactif et en fournissant des retours détaillés sur les corrections apportées aux textes.
-
-- Sources de revenus : Les sources de revenus de Bonjour proviennent des frais de correction facturés aux clients pour chaque texte soumis.
-
-- Ressources clés : Les ressources clés de Bonjour comprennent une équipe de correcteurs professionnels, un site web performant, des outils de correction avancés et une base de données de références linguistiques.
-
-- Activités clés : Les activités clés de Bonjour incluent la correction et la révision de textes, la communication avec les clients, la gestion des paiements et la promotion des services.
-
-- Partenaires clés : Bonjour collabore avec des correcteurs professionnels indépendants, des entreprises partenaires pour la promotion et des prestataires de services de paiement en ligne.
-
-- Structure des coûts : Les principaux coûts de Bonjour sont liés aux salaires des correcteurs, aux frais de marketing, à l'hébergement du site web et aux outils de correction.
+- Segments de clientèle : Le restaurant cible les clients locaux ainsi que les touristes en quête d'une expérience culinaire authentique et de qualité.
+- Proposition de valeur : Offrir une cuisine délicieuse et créative, avec des ingrédients frais et locaux, dans une atmosphère chaleureuse et conviviale.
+- Canaux : Le restaurant utilise principalement le bouche-à-oreille, les réseaux sociaux, son site web et les plateformes de réservation en ligne pour attirer les clients.
+- Relations clients : Le restaurant privilégie une approche personnalisée en offrant un service attentionné et en écoutant les retours des clients pour améliorer continuellement l'expérience.
+- Sources de revenus : Les principales sources de revenus du restaurant proviennent des ventes de plats, de boissons, de desserts et des événements spéciaux.
+- Ressources clés : Les ressources clés incluent le personnel qualifié, les équipements de cuisine, les fournisseurs d'ingrédients, l'emplacement du restaurant et la réputation de la marque.
+- Activités clés : Les activités clés comprennent la préparation des plats, la gestion des stocks, le service client, le marketing et la gestion financière.
+- Partenaires clés : Les partenaires clés du restaurant incluent les fournisseurs locaux d'ingrédients, les services de livraison, les critiques gastronomiques et les organismes de tourisme locaux.
+- Structure des coûts : Les principaux coûts du restaurant comprennent les salaires du personnel, les achats d'ingrédients, le loyer, les coûts marketing et les frais généraux.

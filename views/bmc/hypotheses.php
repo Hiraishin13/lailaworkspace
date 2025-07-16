@@ -170,6 +170,7 @@ try {
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
+
         <h2 class="section-title text-center mb-5">Gestion des Hypothèses - <?= htmlspecialchars($project['name']) ?></h2>
 
         <!-- Guide pour comprendre et gérer les hypothèses -->
@@ -218,12 +219,14 @@ try {
                                         </span>
                                     </div>
                                     <div class="hypothesis-actions mt-auto">
-                                        <button class="btn review-btn review-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-index="<?= $index ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-status="<?= htmlspecialchars($hypothesis['status']) ?>" data-test-plan="<?= htmlspecialchars($hypothesis['test_plan'] ?? '') ?>" data-bs-toggle="modal" data-bs-target="#reviewHypothesisModal">
-                                            <i class="bi bi-eye"></i> Voir
-                                        </button>
-                                        <button class="btn btn-edit edit-hypothesis-btn" data-id="<?= $hypothesis['id'] ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-bs-toggle="modal" data-bs-target="#editHypothesisModal">
-                                            <i class="bi bi-pencil"></i> Modifier
-                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn review-btn review-hypothesis-btn flex-fill" data-id="<?= $hypothesis['id'] ?>" data-index="<?= $index ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-status="<?= htmlspecialchars($hypothesis['status']) ?>" data-test-plan="<?= htmlspecialchars($hypothesis['test_plan'] ?? '') ?>" data-bs-toggle="modal" data-bs-target="#reviewHypothesisModal">
+                                                <i class="bi bi-eye me-1"></i> Voir
+                                            </button>
+                                            <button class="btn btn-edit edit-hypothesis-btn flex-fill" data-id="<?= $hypothesis['id'] ?>" data-text="<?= htmlspecialchars($hypothesis['hypothesis_text']) ?>" data-bs-toggle="modal" data-bs-target="#editHypothesisModal">
+                                                <i class="bi bi-pencil me-1"></i> Modifier
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -234,20 +237,26 @@ try {
 
                 <!-- Boutons d'action en bas -->
                 <div class="visualisation-actions mt-4">
-                    <a href="hypotheses.php?project_id=<?= $project_id ?>&generate=1" class="btn btn-primary" id="generate-hypotheses-btn">
-                        <i class="bi bi-magic"></i> Générer des Analyses
-                    </a>
-                    <a href="download_hypotheses_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary">
-                        <i class="bi bi-file-earmark-pdf"></i> Télécharger en PDF
-                    </a>
-                    <a href="visualisation.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary">
-                        <i class="bi bi-arrow-left"></i> Retour au BMC
-                    </a>
-                    <?php if ($progress_percentage == 100): ?>
-                        <a href="financial_plan.php?project_id=<?= $project_id ?>" class="btn btn-success">
-                            <i class="bi bi-calculator"></i> Passer au Plan Financier
-                        </a>
-                    <?php endif; ?>
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+                                <a href="hypotheses.php?project_id=<?= $project_id ?>&generate=1" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" id="generate-hypotheses-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-magic me-2"></i> Générer des Analyses
+                                </a>
+                                <a href="download_hypotheses_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Exporter en PDF
+                                </a>
+                                <?php if ($progress_percentage == 100): ?>
+                                    <a href="financial_plan.php?project_id=<?= $project_id ?>" class="btn btn-success w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-calculator me-2"></i>  Plan Financier
+                                    </a>
+                                <?php endif; ?>
+                                <a href="visualisation.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-arrow-left me-2"></i> Retour au BMC
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,21 +369,7 @@ try {
         </div>
     </div>
 
-    <!-- Modale pour le loader épuré -->
-    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-sm" style="background: transparent;">
-                <div class="modal-body text-center">
-                    <div class="spinner-container">
-                        <div class="spinner-border text-primary spinner-custom" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                        <p class="mt-3 text-light loading-text">Génération des hypothèses en cours...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Le spinner global est géré par scripts.js -->
 
     <!-- Conteneur pour l'icône de confirmation -->
     <div id="successIcon">
@@ -429,17 +424,21 @@ try {
             });
         });
 
-        // Gestion du loader épuré pour "Générer des hypothèses"
+        // Gestion du spinner global pour "Générer des hypothèses"
         $('#generate-hypotheses-btn').on('click', function(e) {
-            $('#loadingModal').modal('show');
-            $(this).addClass('disabled').prop('disabled', true);
+            if (window.showGlobalSpinner) {
+                window.showGlobalSpinner('Génération des hypothèses en cours...');
+            }
+            // Ne pas désactiver le bouton pour éviter les problèmes de style
+            // Le spinner global gère déjà l'interaction
         });
 
-        // Gérer la redirection après la génération (fermer le loader)
+        // Gérer la redirection après la génération (fermer le spinner)
         <?php if (isset($_GET['generate']) && $_GET['generate'] == 1): ?>
             $(window).on('load', function() {
-                $('#loadingModal').modal('hide');
-                $('#generate-hypotheses-btn').removeClass('disabled').prop('disabled', false);
+                if (window.hideGlobalSpinner) {
+                    window.hideGlobalSpinner();
+                }
             });
         <?php endif; ?>
 

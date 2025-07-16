@@ -1,3 +1,8 @@
+<?php if (empty($GLOBALS['ICONS_INCLUDED'])): ?>
+    <?php $GLOBALS['ICONS_INCLUDED'] = true; ?>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<?php endif; ?>
 <footer class="footer-modern py-5 mt-5">
     <div class="container">
         <div class="row g-4">

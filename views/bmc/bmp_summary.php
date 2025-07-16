@@ -102,10 +102,11 @@ if (isset($_GET['generate_cta']) && $_GET['generate_cta'] == 1) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Récapitulatif du BMP - Laila Workspace</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
+    <title>Récapitulatif BMP - Laila Workspace</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../../assets/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <?php include '../layouts/navbar.php'; ?>
@@ -126,6 +127,7 @@ if (isset($_GET['generate_cta']) && $_GET['generate_cta'] == 1) {
             </div>
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
+
 
         <h2 class="section-title text-center mb-5">Récapitulatif du BMP - <?= htmlspecialchars($project['name']) ?></h2>
 
@@ -221,16 +223,22 @@ if (isset($_GET['generate_cta']) && $_GET['generate_cta'] == 1) {
         </div>
 
         <!-- Boutons d'action -->
-        <div class="action-buttons text-center my-5">
-            <a href="download_bmp_summary_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary">
-                <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
-            </a>
-            <button class="btn btn-primary" id="generate-cta-btn" onclick="window.location.href='bmp_summary.php?project_id=<?= $project_id ?>&generate_cta=1'">
-                <i class="bi bi-megaphone"></i> Générer un Appel à Action
-            </button>
-            <a href="financial_plan.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left"></i> Retour au Plan Financier
-            </a>
+        <div class="action-buttons my-5">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+                        <a href="download_bmp_summary_pdf.php?project_id=<?= $project_id ?>" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> Exporter en PDF
+                        </a>
+                        <a href="bmp_summary.php?project_id=<?= $project_id ?>&generate_cta=1" class="btn btn-primary w-100 w-md-auto px-4 py-2 action-btn" id="generate-cta-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-megaphone me-2"></i> Générer un Appel à Action
+                        </a>
+                        <a href="financial_plan.php?project_id=<?= $project_id ?>" class="btn btn-outline-primary w-100 w-md-auto px-4 py-2 action-btn" style="min-width: 200px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-arrow-left me-2"></i> Retour au Plan Financier
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Afficher l'appel à action généré -->

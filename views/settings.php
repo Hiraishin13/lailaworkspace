@@ -155,9 +155,10 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paramètres - Laila Workspace</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <?php include './layouts/navbar.php'; ?>
@@ -189,6 +190,7 @@ try {
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
+
         <h2 class="section-title text-center mb-5">Paramètres du compte</h2>
 
         <!-- Gestion du compte -->
@@ -207,26 +209,46 @@ try {
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="profile_picture" class="form-label">Photo de Profil</label>
-                        <?php if ($user['profile_picture']): ?>
-                            <div class="mb-2">
-                                <img src="<?= BASE_URL . htmlspecialchars($user['profile_picture']) ?>" alt="Photo de profil" class="profile-picture rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
-                            </div>
-                        <?php endif; ?>
-                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                        <div class="profile-picture-container mb-3">
+                            <?php if ($user['profile_picture']): ?>
+                                <div class="current-profile-picture">
+                                    <img src="<?= BASE_URL . htmlspecialchars($user['profile_picture']) ?>" alt="Photo de profil actuelle" class="profile-picture rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary-color);">
+                                    <div class="profile-picture-overlay">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="default-profile-picture">
+                                    <div class="profile-placeholder rounded-circle" style="width: 120px; height: 120px; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div class="profile-picture-overlay">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('profile_picture').click()">
+                                <i class="bi bi-upload me-2"></i>Choisir une photo
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="previewProfilePicture()">
+                                <i class="bi bi-eye me-2"></i>Aperçu
+                            </button>
+                        </div>
                         <small class="form-text text-muted">Formats acceptés : JPEG, PNG, GIF. Taille max : 5 Mo.</small>
+                        <div id="profile-preview" class="mt-2" style="display: none;">
+                            <img id="preview-image" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; border: 2px solid var(--primary-color);">
+                        </div>
                     </div>
                 </div>
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Mettre à Jour</button>
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-save me-2"></i> Mettre à Jour
+                    </button>
                 </div>
             </form>
-
-            <!-- Bouton pour supprimer le compte -->
-            <div class="text-center mt-4">
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                    <i class="bi bi-trash"></i> Supprimer mon compte
-                </button>
-            </div>
         </div>
 
         <!-- Section Préférences utilisateur -->
@@ -338,6 +360,23 @@ try {
                 </div>
             <?php endif; ?>
         </div>
+
+        <!-- Section Suppression de compte (tout en bas) -->
+        <div class="settings-section mt-5 mb-5 border-top pt-5">
+            <div class="text-center">
+                <h4 class="text-danger mb-4"><i class="bi bi-exclamation-triangle me-2"></i> Zone Dangereuse</h4>
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-warning me-2"></i>
+                    <strong>Attention :</strong> La suppression de votre compte est irréversible. Toutes vos données, projets et informations seront définitivement supprimés.
+                </div>
+                <button type="button" class="btn btn-danger btn-lg px-5 py-3" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="bi bi-trash me-2"></i> Supprimer mon compte définitivement
+                </button>
+                <p class="text-muted mt-3">
+                    <small>Cette action ne peut pas être annulée. Assurez-vous d'avoir sauvegardé toutes vos données importantes.</small>
+                </p>
+            </div>
+        </div>
         <!-- fin des sections -->
     </div>
     </div>
@@ -345,6 +384,52 @@ try {
     <?php include './layouts/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Prévisualisation de la photo de profil
+        function previewProfilePicture() {
+            const fileInput = document.getElementById('profile_picture');
+            const preview = document.getElementById('profile-preview');
+            const previewImage = document.getElementById('preview-image');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                alert('Veuillez d\'abord sélectionner une image.');
+            }
+        }
+
+        // Aperçu automatique lors de la sélection d'un fichier
+        document.getElementById('profile_picture').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                previewProfilePicture();
+            }
+        });
+
+        // Animation au survol de la photo de profil
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileContainer = document.querySelector('.profile-picture-container');
+            if (profileContainer) {
+                profileContainer.addEventListener('mouseenter', function() {
+                    const overlay = this.querySelector('.profile-picture-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '1';
+                    }
+                });
+                
+                profileContainer.addEventListener('mouseleave', function() {
+                    const overlay = this.querySelector('.profile-picture-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                    }
+                });
+            }
+        });
+    </script>
     <style>
         body {
             display: flex;
@@ -359,6 +444,80 @@ try {
             flex-shrink: 0;
             width: 100%;
             margin-top: auto; /* Pousse le footer vers le bas */
+        }
+
+        /* Styles pour la photo de profil */
+        .profile-picture-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .current-profile-picture,
+        .default-profile-picture {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-picture-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .profile-picture-container:hover .profile-picture-overlay {
+            opacity: 1;
+        }
+
+        .profile-picture-container:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+
+        .input-group .btn {
+            border-radius: 8px;
+        }
+
+        #profile-preview {
+            text-align: center;
+        }
+
+        /* Animation pour le bouton de suppression */
+        .btn-danger {
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-picture-container img,
+            .profile-placeholder {
+                width: 100px !important;
+                height: 100px !important;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group .btn {
+                margin-bottom: 0.5rem;
+            }
         }
     </style>
 </body>

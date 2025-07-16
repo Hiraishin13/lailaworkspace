@@ -76,6 +76,15 @@ if ($is_logged_in) {
             <div class="loader-subtext">Laila Workspace</div>
         </div>
     </div>
+    
+    <!-- Loader JavaScript (sera créé automatiquement) -->
+    <div id="js-loader" class="loader-overlay" style="display: none;">
+        <div class="loader-container">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement...</div>
+            <div class="loader-subtext">Laila Workspace</div>
+        </div>
+    </div>
 
     <!-- Navbar cohérente -->
     <?php include __DIR__ . '/navbar.php'; ?>
@@ -97,6 +106,9 @@ if ($is_logged_in) {
     <!-- Script du loader -->
     <script src="<?= BASE_URL ?>/assets/js/loader.js"></script>
     
+    <!-- Script de correction d'URLs -->
+    <script src="<?= BASE_URL ?>/assets/js/url-fix.js"></script>
+    
     <!-- Scripts supplémentaires spécifiques à la page -->
     <?php if ($additional_js): ?>
         <?= $additional_js ?>
@@ -106,18 +118,55 @@ if ($is_logged_in) {
     <script>
         // Masquer le loader initial après le chargement
         document.addEventListener('DOMContentLoaded', function() {
+            // Vérifier si l'URL est incorrecte et afficher un message
+            const currentUrl = window.location.href;
+            if (currentUrl.includes('C:/wamp64/www/') || currentUrl.includes('C:\\wamp64\\www\\')) {
+                // Créer un message d'alerte
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                alertDiv.innerHTML = `
+                    <strong>URL incorrecte détectée !</strong><br>
+                    Utilisez plutôt : <code>http://localhost/lailaworkspace/</code><br>
+                    <small class="text-muted">Cette URL sera automatiquement corrigée.</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                // Supprimer le message après 5 secondes
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+            
             // Masquer le loader global après un court délai
             setTimeout(() => {
                 const globalLoader = document.getElementById('global-loader');
                 if (globalLoader) {
                     globalLoader.classList.add('hidden');
+                    globalLoader.style.opacity = '0';
+                    setTimeout(() => {
+                        globalLoader.style.display = 'none';
+                    }, 300);
                 }
                 
                 // S'assurer que le loader JavaScript se masque aussi
                 if (window.lailaLoader) {
                     window.lailaLoader.hideLoader();
                 }
-            }, 1000);
+                
+                // Forcer le masquage de tous les loaders
+                const allLoaders = document.querySelectorAll('.loader-overlay, #global-loader, #js-loader');
+                allLoaders.forEach(loader => {
+                    if (loader) {
+                        loader.classList.add('hidden');
+                        loader.style.opacity = '0';
+                        loader.style.display = 'none';
+                    }
+                });
+            }, 800);
             
             // Ajouter des animations d'entrée pour les éléments
             const animatedElements = document.querySelectorAll('.card, .btn, .alert');
@@ -134,6 +183,8 @@ if ($is_logged_in) {
             if (window.lailaLoader) {
                 window.lailaLoader.hideLoader();
             }
+            // Forcer le masquage
+            window.forceHideLoader();
         });
 
         // Améliorer l'expérience utilisateur
@@ -150,6 +201,13 @@ if ($is_logged_in) {
                 return new bootstrap.Popover(popoverTriggerEl);
             });
         });
+        
+        // Sécurité supplémentaire : forcer le masquage après 1.5 secondes
+        setTimeout(() => {
+            if (window.forceHideLoader) {
+                window.forceHideLoader();
+            }
+        }, 1500);
     </script>
 </body>
 </html> 

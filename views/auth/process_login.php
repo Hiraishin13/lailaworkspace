@@ -43,6 +43,17 @@ try {
         // Connexion réussie
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
+        
+        // Récupérer le rôle de l'utilisateur
+        $role_id = $user['role_id'] ?? 1; // Par défaut: utilisateur standard
+        
+        // Récupérer le nom du rôle
+        $stmt_role = $pdo->prepare("SELECT name FROM user_roles WHERE id = ?");
+        $stmt_role->execute([$role_id]);
+        $role = $stmt_role->fetch(PDO::FETCH_ASSOC);
+        
+        $_SESSION['user_role'] = $role['name'] ?? 'user';
+        $_SESSION['role_id'] = $role_id;
 
         // Vérifier si une URL de redirection est stockée dans la session
         if (isset($_SESSION['redirect_after_login'])) {
@@ -96,8 +107,15 @@ try {
             // Rediriger vers l'URL stockée
             header('Location: ' . $redirect_url);
         } else {
-            // Redirection par défaut
+                    // Redirection par défaut selon le rôle
+        if ($_SESSION['user_role'] === 'admin') {
+            // Ajouter un message de bienvenue pour l'admin
+            $_SESSION['admin_welcome'] = true;
+            $_SESSION['admin_name'] = $user['first_name'] ?? 'David';
+            header('Location: ' . BASE_URL . '/views/admin/dashboard.php');
+        } else {
             header('Location: ' . BASE_URL . '/views/bmc/generate_bmc.php?login_success=true');
+        }
         }
         exit();
     } else {
@@ -110,3 +128,4 @@ try {
     header('Location: login.php');
     exit();
 }
+?>

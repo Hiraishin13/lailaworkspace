@@ -182,16 +182,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function enhanceAlerts() {
         // Animation d'entrée pour les alertes
         document.querySelectorAll('.alert').forEach(alert => {
-            alert.style.animation = 'slideInRight 0.5s ease';
-            
-            // Auto-fermeture des alertes de succès
-            if (alert.classList.contains('alert-success')) {
-                setTimeout(() => {
-                    alert.style.animation = 'slideOutRight 0.5s ease';
+            // Vérifier que c'est une vraie alerte de notification (pas du contenu de page)
+            if (alert.closest('.container') && !alert.closest('.card-body')) {
+                alert.style.animation = 'slideInRight 0.5s ease';
+                
+                // Auto-fermeture des alertes de succès seulement pour les notifications
+                if (alert.classList.contains('alert-success') && alert.textContent.includes('successfully')) {
                     setTimeout(() => {
-                        alert.remove();
-                    }, 500);
-                }, 5000);
+                        alert.style.animation = 'slideOutRight 0.5s ease';
+                        setTimeout(() => {
+                            alert.remove();
+                        }, 500);
+                    }, 5000);
+                }
             }
         });
     }
@@ -283,6 +286,160 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ==========================================================================
+    // Système de spinner global pour la navigation
+    // ==========================================================================
+    function initGlobalSpinner() {
+        // Créer le spinner global s'il n'existe pas
+        let globalSpinner = document.getElementById('global-spinner');
+        if (!globalSpinner) {
+            globalSpinner = document.createElement('div');
+            globalSpinner.id = 'global-spinner';
+            globalSpinner.innerHTML = `
+                <div class="spinner-overlay">
+                    <div class="spinner-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="spinner-text mt-3">Chargement en cours...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(globalSpinner);
+        }
+
+        // Variables pour gérer le spinner
+        let spinnerTimeout;
+        let isSpinnerVisible = false;
+        let navigationInProgress = false;
+
+        // Fonction pour afficher le spinner
+        function showSpinner(message = 'Chargement en cours...') {
+            if (isSpinnerVisible) return;
+            
+            isSpinnerVisible = true;
+            navigationInProgress = true;
+            
+            const spinnerText = globalSpinner.querySelector('.spinner-text');
+            if (spinnerText) {
+                spinnerText.textContent = message;
+            }
+            
+            globalSpinner.style.display = 'flex';
+            globalSpinner.style.opacity = '0';
+            
+            // Animation d'entrée
+            setTimeout(() => {
+                globalSpinner.style.opacity = '1';
+            }, 10);
+
+            // Timeout de sécurité (30 secondes max)
+            spinnerTimeout = setTimeout(() => {
+                hideSpinner();
+                console.warn('Spinner timeout - navigation trop longue');
+            }, 30000);
+        }
+
+        // Fonction pour masquer le spinner
+        function hideSpinner() {
+            if (!isSpinnerVisible) return;
+            
+            clearTimeout(spinnerTimeout);
+            isSpinnerVisible = false;
+            navigationInProgress = false;
+            
+            globalSpinner.style.opacity = '0';
+            
+            setTimeout(() => {
+                globalSpinner.style.display = 'none';
+            }, 300);
+        }
+
+        // Intercepter les clics sur les liens de navigation
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            // Ignorer les liens qui ouvrent des modales ou des popups
+            if (link.hasAttribute('data-bs-toggle') || 
+                link.hasAttribute('data-bs-target') ||
+                link.target === '_blank' ||
+                link.href.startsWith('javascript:') ||
+                link.href.startsWith('#') ||
+                link.href.includes('mailto:') ||
+                link.href.includes('tel:')) {
+                return;
+            }
+
+            // Ignorer les liens vers des fichiers à télécharger
+            if (link.href.includes('download_') || 
+                link.href.includes('.pdf') ||
+                link.href.includes('.xlsx') ||
+                link.href.includes('.xls')) {
+                return;
+            }
+
+            // Afficher le spinner pour les navigations internes
+            if (link.href && link.href.includes(window.location.origin)) {
+                e.preventDefault();
+                
+                const message = link.textContent.trim() || 'Navigation en cours...';
+                showSpinner(message);
+                
+                // Rediriger après un court délai pour permettre l'affichage du spinner
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100);
+            }
+        });
+
+        // Intercepter les soumissions de formulaires
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form) return;
+
+            // Ignorer les formulaires de recherche ou de filtrage
+            if (form.classList.contains('search-form') || 
+                form.classList.contains('filter-form')) {
+                return;
+            }
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                const message = submitBtn.textContent.trim() || 'Traitement en cours...';
+                showSpinner(message);
+            }
+        });
+
+        // Masquer le spinner quand la page est chargée
+        window.addEventListener('load', function() {
+            hideSpinner();
+        });
+
+        // Masquer le spinner en cas d'erreur
+        window.addEventListener('error', function() {
+            hideSpinner();
+        });
+
+        // Masquer le spinner si l'utilisateur appuie sur Échap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isSpinnerVisible) {
+                hideSpinner();
+            }
+        });
+
+        // Masquer le spinner si l'utilisateur clique en dehors
+        globalSpinner.addEventListener('click', function(e) {
+            if (e.target === globalSpinner) {
+                hideSpinner();
+            }
+        });
+
+        // Exposer les fonctions globalement pour utilisation manuelle
+        window.showGlobalSpinner = showSpinner;
+        window.hideGlobalSpinner = hideSpinner;
+    }
+
+    // ==========================================================================
     // Amélioration de l'accessibilité
     // ==========================================================================
     function enhanceAccessibility() {
@@ -330,6 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         enhanceImages();
         enhancePerformance();
         enhanceAccessibility();
+        initGlobalSpinner(); // Initialiser le spinner global
         
         // Ajouter des classes d'animation aux éléments existants
         document.querySelectorAll('.card, .btn, .nav-link').forEach(el => {
@@ -345,6 +503,52 @@ document.addEventListener('DOMContentLoaded', function() {
 // Styles CSS pour les animations
 // ==========================================================================
 const additionalStyles = `
+    /* Spinner global */
+    #global-spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+    }
+
+    .spinner-overlay {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .spinner-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .spinner-text {
+        color: var(--primary-color);
+        font-weight: 500;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.25rem;
+    }
+
+    /* Animations existantes */
     .ripple {
         position: absolute;
         border-radius: 50%;
@@ -436,6 +640,54 @@ const additionalStyles = `
 
     .lazy.loaded {
         opacity: 1;
+    }
+
+    /* Styles uniformes pour les boutons d'action */
+    .action-btn {
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        line-height: 1.2 !important;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .action-btn:active {
+        transform: translateY(0) !important;
+    }
+
+    .action-btn.disabled {
+        opacity: 0.6 !important;
+        pointer-events: none !important;
+        transform: none !important;
+    }
+
+    /* Responsive pour le spinner */
+    @media (max-width: 768px) {
+        .spinner-overlay {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .spinner-text {
+            font-size: 1rem;
+        }
+        
+        .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        .action-btn {
+            font-size: 0.9rem !important;
+            padding: 0.75rem 1rem !important;
+        }
     }
 `;
 

@@ -265,6 +265,36 @@ EOD;
                 ]);
             }
             $pdo->commit();
+            
+            // Créer des notifications après la création réussie du projet
+            try {
+                require_once BASE_DIR . '/models/Notification.php';
+                require_once BASE_DIR . '/models/Achievement.php';
+                
+                $notification = new Notification($pdo);
+                $achievement = new Achievement($pdo);
+                
+                // Vérifier si c'est le premier BMC de l'utilisateur
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM projects WHERE user_id = ?");
+                $stmt->execute([$_SESSION['user_id']]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($result['count'] == 1) {
+                    // Premier BMC - notification de bienvenue
+                    $notification->createWelcomeNotification($_SESSION['user_id']);
+                    
+                    // Débloquer l'achievement
+                    $achievement->unlock($_SESSION['user_id'], 'first_bmc', 'Premier BMC', 'Vous avez créé votre premier Business Model Canvas', 'bi-rocket-takeoff', 100);
+                }
+                
+                // Vérifier et débloquer d'autres achievements
+                $achievement->checkAndUnlockAchievements($_SESSION['user_id']);
+                
+            } catch (Exception $e) {
+                // Ignorer les erreurs de notifications
+                error_log('Erreur notification BMC: ' . $e->getMessage());
+            }
+            
         } catch (PDOException $e) {
             $pdo->rollBack();
             error_log('Erreur lors de l\'enregistrement du projet ou des blocs BMC : ' . $e->getMessage());
@@ -343,6 +373,7 @@ if (!isset($_SESSION['user_id'])) {
                 Vous visualisez un aperçu de votre BMC. Vous serez redirigé vers la page de connexion dans <span id="timer">5</span> secondes pour sauvegarder votre travail.
             </div>
         <?php endif; ?>
+
 
         <h2 class="text-center text-primary mb-5 fw-bold"><?= htmlspecialchars($project_name) ? htmlspecialchars($project_name) : 'Votre Business Model Canvas' ?></h2>
 

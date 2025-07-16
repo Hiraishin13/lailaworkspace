@@ -24,40 +24,8 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/loader.css">
     <style>
-        /* Style pour le loader */
-        .loader-container {
-            display: none; /* Caché par défaut */
-            text-align: center;
-            margin-top: 10px;
-        }
-        .loader-container.show {
-            display: block; /* Affiché lorsque la classe "show" est ajoutée */
-        }
-        .bmc-loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-top: 1.5rem;
-            min-height: 70px;
-            width: 100%;
-        }
-        .bmc-loader-container .spinner-border {
-            width: 2.5rem;
-            height: 2.5rem;
-        }
-        .bmc-loader-container p {
-            margin-top: 1rem;
-            color: #007bff;
-            font-weight: 500;
-            font-size: 1.05rem;
-        }
-        @media (max-width: 576px) {
-            .bmc-loader-container {
-                min-height: 60px;
-            }
-        }
         #submit-btn.btn {
             background: linear-gradient(90deg, #007bff 0%, #00c4b4 100%);
             color: #fff;
@@ -97,6 +65,18 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
             padding: 0.5rem 1.7rem;
             max-width: 240px;
             font-size: 0.98rem;
+            transition: all 0.3s ease;
+        }
+        
+        #submit-btn.btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #6c757d !important;
+            border-color: #6c757d !important;
+        }
+        
+        #submit-btn.btn:not(:disabled):hover {
+            transform: translateY(-2px) scale(1.04);
         }
         /* Amélioration de la zone de texte */
         #prompt.form-control {
@@ -118,6 +98,26 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
             color: #adb5bd;
             opacity: 1;
             font-size: 1rem;
+        }
+        .bmc-container .row {
+            margin-bottom: 2.2rem !important;
+            gap: 1.5rem 0 !important;
+        }
+        .bmc-card {
+            margin-bottom: 1.2rem;
+            min-height: 200px;
+            height: auto;
+        }
+        .bmc-card h5 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .bmc-card p {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .bmc-card .bi {
+            font-size: 2.5rem !important;
         }
     </style>
 </head>
@@ -161,16 +161,10 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
                             </div>
                         </div>
                         <center>
-                            <button type="submit" class="btn" id="submit-btn">
+                            <button type="submit" class="btn" id="submit-btn" disabled>
                                 Générer mon BMC
                             </button>
                         </center>
-                        <div class="bmc-loader-container" id="loader" style="display:none;">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Chargement...</span>
-                            </div>
-                            <p>Génération en cours, veuillez patienter...</p>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -201,7 +195,7 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
                 </p>
                 <div class="bmc-container">
                     <!-- Ligne 1 -->
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 mb-4">
                         <!-- Partenaires clés -->
                         <div class="col-md-4">
                             <div class="card p-4 shadow-sm text-center bmc-card">
@@ -229,7 +223,7 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
                     </div>
 
                     <!-- Ligne 2 -->
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 mb-4">
                         <!-- Activités clés -->
                         <div class="col-md-4">
                             <div class="card p-4 shadow-sm text-center bmc-card">
@@ -257,7 +251,7 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
                     </div>
 
                     <!-- Ligne 3 -->
-                    <div class="row g-2">
+                    <div class="row g-2 mb-4">
                         <!-- Structure des coûts -->
                         <div class="col-md-4">
                             <div class="card p-4 shadow-sm text-center bmc-card">
@@ -290,11 +284,69 @@ unset($_SESSION['error']); // Effacer le message d'erreur après l'affichage
 
     <?php include '../layouts/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/loader.js"></script>
     <script>
+        // Gérer l'activation/désactivation du bouton selon le contenu du champ
+        const promptField = document.getElementById('prompt');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        function updateButtonState() {
+            const hasContent = promptField.value.trim().length > 0;
+            submitBtn.disabled = !hasContent;
+            
+            if (hasContent) {
+                submitBtn.classList.remove('btn-secondary');
+                submitBtn.classList.add('btn-primary');
+            } else {
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-secondary');
+            }
+        }
+        
+        // Écouter les changements dans le champ de texte
+        promptField.addEventListener('input', updateButtonState);
+        promptField.addEventListener('keyup', updateButtonState);
+        
+        // Initialiser l'état du bouton
+        updateButtonState();
+        
+        // Fonction pour restaurer l'état initial du bouton
+        function resetButtonState() {
+            submitBtn.textContent = 'Générer mon BMC';
+            submitBtn.disabled = promptField.value.trim().length === 0;
+            updateButtonState();
+        }
+        
+        // Restaurer l'état initial quand on revient en arrière
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page chargée depuis le cache (retour arrière)
+                resetButtonState();
+            }
+        });
+        
+        // Restaurer l'état initial au chargement de la page
+        window.addEventListener('load', function() {
+            resetButtonState();
+        });
+        
+        // Gérer la soumission du formulaire
         document.getElementById('bmc-form').addEventListener('submit', function (e) {
-            document.getElementById('loader').style.display = 'flex';
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('submit-btn').innerText = 'Génération en cours...';
+            // Vérifier que le champ n'est pas vide
+            if (promptField.value.trim().length === 0) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Afficher le loader global avec un message personnalisé
+            if (window.lailaLoader) {
+                window.lailaLoader.showLoader('Génération de votre BMC...', 'IA en cours de traitement');
+            }
+            
+            // Changer le texte du bouton
+            submitBtn.textContent = 'Génération en cours...';
+            submitBtn.disabled = true;
         });
     </script>
 </body>

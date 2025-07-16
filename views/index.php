@@ -1,7 +1,23 @@
 <?php
 session_start();
-require_once '../includes/db_connect.php';
-require_once '../includes/config.php';
+
+// Redirection automatique des URLs incorrectes
+$current_url = $_SERVER['REQUEST_URI'];
+if (strpos($current_url, 'C:/wamp64/www/') !== false || strpos($current_url, 'C:\\wamp64\\www\\') !== false) {
+    $correct_url = str_replace(['C:/wamp64/www/', 'C:\\wamp64\\www\\'], '/', $current_url);
+    header("Location: " . $correct_url, true, 301);
+    exit;
+}
+
+// Définir BASE_URL si pas déjà défini
+if (!defined('BASE_URL')) {
+    define('BASE_URL', 'http://localhost/lailaworkspace');
+}
+
+// Utiliser des chemins absolus depuis la racine du projet
+$root_path = dirname(__DIR__);
+require_once $root_path . '/includes/db_connect.php';
+require_once $root_path . '/includes/config.php';
 
 // Configuration pour le template de base
 $page_title = 'Accueil - Laila Workspace';

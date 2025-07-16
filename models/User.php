@@ -18,6 +18,12 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function findByEmail($email) {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function update($id, $email, $password = null) {
         if ($password) {
             $stmt = $this->pdo->prepare("UPDATE users SET email = ?, password = ? WHERE id = ?");
@@ -26,5 +32,11 @@ class User {
             $stmt = $this->pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
             $stmt->execute([$email, $id]);
         }
+    }
+
+    public function updatePassword($email, $password) {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $this->pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
+        return $stmt->execute([$hashedPassword, $email]);
     }
 }
