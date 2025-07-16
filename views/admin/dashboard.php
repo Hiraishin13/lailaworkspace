@@ -242,9 +242,9 @@ try {
 
                 <!-- Actions de page -->
                 <div class="d-flex gap-2 mb-3">
-                    <button class="btn btn-outline-primary btn-sm" onclick="refreshData()">
-                        <i class="bi bi-arrow-clockwise"></i> Actualiser
-                    </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Actualiser
+                        </button>
                 </div>
 
                 <!-- Message de bienvenue pour l'admin -->

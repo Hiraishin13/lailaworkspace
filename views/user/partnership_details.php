@@ -190,7 +190,7 @@ function calculateBasicCompatibility($pdo, $project1_id, $project2_id) {
             $score += 25;
         } elseif (strpos($segment1, 'particulier') !== false && strpos($segment2, 'particulier') !== false) {
             $score += 25;
-        } else {
+    } else {
             $score += 15;
         }
     }
@@ -213,7 +213,7 @@ function calculateBasicCompatibility($pdo, $project1_id, $project2_id) {
         
         if (strpos($value1, 'simplifi') !== false && strpos($value2, 'simplifi') !== false) {
             $score += 20;
-        } else {
+    } else {
             $score += 15;
         }
     }

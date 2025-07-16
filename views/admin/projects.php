@@ -137,9 +137,9 @@ try {
 
                 <!-- Actions de page -->
                 <div class="d-flex gap-2 mb-3">
-                    <button class="btn btn-outline-secondary" onclick="refreshData()">
-                        <i class="bi bi-arrow-clockwise"></i> Actualiser
-                    </button>
+                        <button class="btn btn-outline-secondary" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Actualiser
+                        </button>
                 </div>
 
                     <!-- Statistiques -->
@@ -216,37 +216,37 @@ try {
                     <!-- Filtres -->
                     <div class="admin-card mb-4">
                         <div class="card-body">
-                                                    <form method="GET" class="row g-3">
+                            <form method="GET" class="row g-3">
                             <div class="col-md-2">
-                                <label class="form-label">Recherche</label>
-                                <input type="text" class="form-control" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nom, description, code...">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Statut</label>
-                                <select class="form-select" name="status">
-                                    <option value="">Tous</option>
-                                    <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Actif</option>
-                                    <option value="completed" <?= $status === 'completed' ? 'selected' : '' ?>>Terminé</option>
-                                    <option value="archived" <?= $status === 'archived' ? 'selected' : '' ?>>Archivé</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Complétion</label>
-                                <select class="form-select" name="completion">
-                                    <option value="">Tous</option>
-                                    <option value="0-3" <?= $completion === '0-3' ? 'selected' : '' ?>>0-3 blocs</option>
-                                    <option value="4-6" <?= $completion === '4-6' ? 'selected' : '' ?>>4-6 blocs</option>
-                                    <option value="7-9" <?= $completion === '7-9' ? 'selected' : '' ?>>7-9 blocs</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Tri</label>
-                                <select class="form-select" name="sort">
-                                    <option value="created_at" <?= $sort === 'created_at' ? 'selected' : '' ?>>Date création</option>
-                                    <option value="updated_at" <?= $sort === 'updated_at' ? 'selected' : '' ?>>Date modification</option>
-                                    <option value="name" <?= $sort === 'name' ? 'selected' : '' ?>>Nom</option>
-                                </select>
-                            </div>
+                                    <label class="form-label">Recherche</label>
+                                    <input type="text" class="form-control" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nom, description, code...">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Statut</label>
+                                    <select class="form-select" name="status">
+                                        <option value="">Tous</option>
+                                        <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Actif</option>
+                                        <option value="completed" <?= $status === 'completed' ? 'selected' : '' ?>>Terminé</option>
+                                        <option value="archived" <?= $status === 'archived' ? 'selected' : '' ?>>Archivé</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Complétion</label>
+                                    <select class="form-select" name="completion">
+                                        <option value="">Tous</option>
+                                        <option value="0-3" <?= $completion === '0-3' ? 'selected' : '' ?>>0-3 blocs</option>
+                                        <option value="4-6" <?= $completion === '4-6' ? 'selected' : '' ?>>4-6 blocs</option>
+                                        <option value="7-9" <?= $completion === '7-9' ? 'selected' : '' ?>>7-9 blocs</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Tri</label>
+                                    <select class="form-select" name="sort">
+                                        <option value="created_at" <?= $sort === 'created_at' ? 'selected' : '' ?>>Date création</option>
+                                        <option value="updated_at" <?= $sort === 'updated_at' ? 'selected' : '' ?>>Date modification</option>
+                                        <option value="name" <?= $sort === 'name' ? 'selected' : '' ?>>Nom</option>
+                                    </select>
+                                </div>
                             <div class="col-md-2">
                                 <label class="form-label">Par page</label>
                                 <select class="form-select" name="per_page">
@@ -257,12 +257,12 @@ try {
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i> Filtrer
-                                </button>
-                            </div>
-                        </form>
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-search"></i> Filtrer
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
@@ -362,7 +362,7 @@ try {
                                     Affichage de <?= count($projects) ?> projets sur <?= $total_projects ?> au total
                                     (<?= $per_page ?> par page)
                                 </div>
-                                <nav aria-label="Pagination des projets">
+                            <nav aria-label="Pagination des projets">
                                     <ul class="pagination pagination-sm mb-0">
                                         <?php if ($page > 1): ?>
                                             <li class="page-item">
@@ -394,12 +394,12 @@ try {
                                         <?php endif; ?>
                                         
                                         <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                                            <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                                    <li class="page-item <?= $i === $page ? 'active' : '' ?>">
                                                 <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($status) ?>&completion=<?= urlencode($completion) ?>&sort=<?= urlencode($sort) ?>&order=<?= urlencode($order) ?>&per_page=<?= $per_page ?>">
-                                                    <?= $i ?>
-                                                </a>
-                                            </li>
-                                        <?php endfor; ?>
+                                            <?= $i ?>
+                                        </a>
+                                    </li>
+                                    <?php endfor; ?>
                                         
                                         <?php if ($end_page < $total_pages): ?>
                                             <?php if ($end_page < $total_pages - 1): ?>
@@ -427,8 +427,8 @@ try {
                                                 </span>
                                             </li>
                                         <?php endif; ?>
-                                    </ul>
-                                </nav>
+                                </ul>
+                            </nav>
                             </div>
                             <?php endif; ?>
                         </div>
